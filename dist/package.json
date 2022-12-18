@@ -1,6 +1,6 @@
 {
   "name": "@webdeveducation/wp-block-tools",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "author": "WebDevEducation",
   "keywords": [
@@ -8,8 +8,8 @@
     "headless",
     "react"
   ],
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "dist/commonjs/index.js",
+  "module": "dist/es6/index.js",
   "files": [
     "dist",
     "README.md"
@@ -35,7 +35,9 @@
   "scripts": {
     "start": "react-scripts start",
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc && cp package.json README.md ./dist",
+    "build": "npm run clean && npm run build:commonjs && npm run build:es6 && cp package.json README.md ./dist",
+    "build:commonjs": "tsc --outDir dist/commonjs --module commonjs",
+    "build:es6": "tsc",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
