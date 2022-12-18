@@ -1,6 +1,6 @@
 {
   "name": "@webdeveducation/wp-block-tools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "author": "WebDevEducation",
   "keywords": [
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jawblia/npm-test.git"
+    "url": "git+https://github.com/webdeveducation/wp-block-tools.git"
   },
   "babel": {
     "presets": [
