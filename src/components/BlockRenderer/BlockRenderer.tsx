@@ -25,6 +25,12 @@ const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
           return component;
         }
 
+        if (block.inlineStylesheet) {
+          const styleElement = document.createElement('style');
+          styleElement.innerHTML = block.inlineStylesheet;
+          document.head.append(styleElement);
+        }
+
         const processNode = (shouldProcessNode: any) => {
           if (block.innerBlocks?.length) {
             const InnerBlocks = (
@@ -49,10 +55,22 @@ const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
                     node.attribs.class = `${node.attribs.class} is-layout-${block.attributes?.layout?.type}`;
                   }
 
+                  if (block.inlineClassnames) {
+                    node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                  }
+
+                  if (
+                    block.name === 'core/cover' &&
+                    block.attributes.useFeaturedImage
+                  ) {
+                    node.attribs.style = `background-image:url(${block.attributes.url});`;
+                  }
+
                   if (
                     block.name === 'core/buttons' ||
                     block.name === 'core/columns' ||
-                    block.name === 'core/social-links'
+                    block.name === 'core/social-links' ||
+                    block.name === 'core/gallery'
                   ) {
                     node.attribs.class = `${node.attribs.class} is-layout-flex`;
                   }

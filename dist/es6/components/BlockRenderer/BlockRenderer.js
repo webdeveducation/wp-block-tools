@@ -12,6 +12,11 @@ const Blocks = ({ blocks = [], render }) => {
         if (component) {
             return component;
         }
+        if (block.inlineStylesheet) {
+            const styleElement = document.createElement('style');
+            styleElement.innerHTML = block.inlineStylesheet;
+            document.head.append(styleElement);
+        }
         const processNode = (shouldProcessNode) => {
             var _a;
             if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
@@ -30,9 +35,17 @@ const Blocks = ({ blocks = [], render }) => {
                             if ((_c = (_b = block.attributes) === null || _b === void 0 ? void 0 : _b.layout) === null || _c === void 0 ? void 0 : _c.type) {
                                 node.attribs.class = `${node.attribs.class} is-layout-${(_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type}`;
                             }
+                            if (block.inlineClassnames) {
+                                node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                            }
+                            if (block.name === 'core/cover' &&
+                                block.attributes.useFeaturedImage) {
+                                node.attribs.style = `background-image:url(${block.attributes.url});`;
+                            }
                             if (block.name === 'core/buttons' ||
                                 block.name === 'core/columns' ||
-                                block.name === 'core/social-links') {
+                                block.name === 'core/social-links' ||
+                                block.name === 'core/gallery') {
                                 node.attribs.class = `${node.attribs.class} is-layout-flex`;
                             }
                         }
