@@ -3,6 +3,7 @@ import convertHtmlToReact, {
   convertNodeToReactElement,
 } from '@hedgedoc/html-to-react';
 import { IBlockBase } from '../../types';
+import './style.scss';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
@@ -64,6 +65,9 @@ const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
                     block.attributes.useFeaturedImage
                   ) {
                     node.attribs.style = `background-image:url(${block.attributes.url});`;
+                    if (!block.attributes.hasParallax) {
+                      node.attribs.style = `${node.attribs.style}background-size: cover;`;
+                    }
                   }
 
                   if (
