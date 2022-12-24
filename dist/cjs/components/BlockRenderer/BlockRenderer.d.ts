@@ -5,4 +5,5 @@ export type BlockRendererProps = {
     blocks?: IBlockBase[];
     render?: (block: IBlockBase) => React.ReactElement | null;
 };
+export declare const Blocks: ({ blocks, render }: BlockRendererProps) => JSX.Element;
 export declare const BlockRenderer: ({ blocks, render }: BlockRendererProps) => JSX.Element;

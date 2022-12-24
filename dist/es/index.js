@@ -22,7 +22,7 @@ const hasClass = (nd, className) => {
 };
 const Blocks = ({ blocks = [], render }) => {
     return (React.createElement(React.Fragment, null, blocks.map((block) => {
-        var _a;
+        var _a, _b;
         const component = render === null || render === void 0 ? void 0 : render(block);
         if (component) {
             return component;
@@ -88,14 +88,20 @@ const Blocks = ({ blocks = [], render }) => {
                 },
             })));
         };
-        if (!block.originalContent && block.dynamicContent) {
+        if (!block.originalContent &&
+            block.dynamicContent &&
+            !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
+            console.log('FALL INTO HERE: ', block);
             return processNode(() => true);
         }
-        if (!block.originalContent && ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
+        if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
             return (React.createElement("div", { key: block.id },
                 React.createElement(Blocks, { blocks: block.innerBlocks, render: render })));
         }
         switch (block.name) {
+            case 'core/media-text': {
+                return processNode((node) => hasClass(node, 'wp-block-media-text__content'));
+            }
             case 'core/cover': {
                 return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
             }
@@ -126,5 +132,5 @@ const assignIds = (blocks) => {
     return blocks;
 };
 
-export { BlockRenderer, assignIds };
+export { BlockRenderer, Blocks, assignIds };
 //# sourceMappingURL=index.js.map

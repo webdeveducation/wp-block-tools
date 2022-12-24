@@ -28,7 +28,7 @@
     "react-dom": "^16.8.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "rollup -c -w",
     "clean": "rm -rf dist",
     "build": "npm run clean && rollup -c",
     "test": "react-scripts test",

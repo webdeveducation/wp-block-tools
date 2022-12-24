@@ -17,7 +17,7 @@ const hasClass = (nd: any, className: string) => {
   );
 };
 
-const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
+export const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
   return (
     <>
       {blocks.map((block) => {
@@ -109,7 +109,12 @@ const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
           );
         };
 
-        if (!block.originalContent && block.dynamicContent) {
+        if (
+          !block.originalContent &&
+          block.dynamicContent &&
+          !block.innerBlocks?.length
+        ) {
+          console.log('FALL INTO HERE: ', block);
           return processNode(() => true);
         }
 
@@ -122,6 +127,11 @@ const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
         }
 
         switch (block.name) {
+          case 'core/media-text': {
+            return processNode((node: any) =>
+              hasClass(node, 'wp-block-media-text__content')
+            );
+          }
           case 'core/cover': {
             return processNode((node: any) =>
               hasClass(node, 'wp-block-cover__inner-container')
