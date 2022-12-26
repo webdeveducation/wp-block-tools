@@ -35,7 +35,7 @@ const BlockRenderer = ({ blocks = [], render }) => {
         .filter((block) => !!block.inlineStylesheet)
         .map((block) => block.inlineStylesheet);
     return (React__default["default"].createElement(React__default["default"].Fragment, null,
-        !!inlineStylesheets.length && (React__default["default"].createElement(reactHelmet.Helmet, null, inlineStylesheets.map((stylesheet, i) => (React__default["default"].createElement("style", { key: i, dangerouslySetInnerHTML: { __html: stylesheet } }))))),
+        !!inlineStylesheets.length && (React__default["default"].createElement(reactHelmet.Helmet, null, inlineStylesheets.map((stylesheet, i) => (React__default["default"].createElement("style", { key: i, dangerouslySetInnerHTML: { __html: stylesheet || '' } }))))),
         blocks.map((block) => {
             var _a, _b;
             const component = render === null || render === void 0 ? void 0 : render(block);

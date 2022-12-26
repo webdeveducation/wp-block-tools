@@ -4,5 +4,7 @@ export interface IBlockBase {
   originalContent?: string;
   dynamicContent?: string;
   innerBlocks?: IBlockBase[];
+  inlineStylesheet?: string;
+  inlineClassnames?: string;
   [key: string]: any;
 }
