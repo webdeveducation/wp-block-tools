@@ -114,7 +114,6 @@ export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
           block.dynamicContent &&
           !block.innerBlocks?.length
         ) {
-          console.log('FALL INTO HERE: ', block);
           return processNode(() => true);
         }
 
