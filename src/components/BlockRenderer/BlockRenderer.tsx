@@ -3,6 +3,7 @@ import convertHtmlToReact, {
   convertNodeToReactElement,
 } from '@hedgedoc/html-to-react';
 import { IBlockBase } from '../../types';
+import { Helmet } from 'react-helmet';
 import './style.scss';
 
 export type BlockRendererProps = {
@@ -18,18 +19,23 @@ const hasClass = (nd: any, className: string) => {
 };
 
 export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
+  const inlineStylesheets = blocks
+    .filter((block) => !!block.inlineStylesheet)
+    .map((block) => block.inlineStylesheet);
+
   return (
     <>
+      {!!inlineStylesheets.length && (
+        <Helmet>
+          {inlineStylesheets.map((stylesheet, i) => (
+            <style key={i} dangerouslySetInnerHTML={{ __html: stylesheet }} />
+          ))}
+        </Helmet>
+      )}
       {blocks.map((block) => {
         const component = render?.(block);
         if (component) {
           return component;
-        }
-
-        if (block.inlineStylesheet) {
-          const styleElement = document.createElement('style');
-          styleElement.innerHTML = block.inlineStylesheet;
-          document.head.append(styleElement);
         }
 
         const processNode = (shouldProcessNode: any) => {

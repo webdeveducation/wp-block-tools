@@ -15,6 +15,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var React = require('react');
 var convertHtmlToReact = require('@hedgedoc/html-to-react');
+var reactHelmet = require('react-helmet');
 var uuid = require('uuid');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -30,94 +31,94 @@ const hasClass = (nd, className) => {
         ((_c = (_b = nd.attribs) === null || _b === void 0 ? void 0 : _b.class) === null || _c === void 0 ? void 0 : _c.split(' ').find((c) => c === className)));
 };
 const BlockRenderer = ({ blocks = [], render }) => {
-    return (React__default["default"].createElement(React__default["default"].Fragment, null, blocks.map((block) => {
-        var _a, _b;
-        const component = render === null || render === void 0 ? void 0 : render(block);
-        if (component) {
-            return component;
-        }
-        if (block.inlineStylesheet) {
-            const styleElement = document.createElement('style');
-            styleElement.innerHTML = block.inlineStylesheet;
-            document.head.append(styleElement);
-        }
-        const processNode = (shouldProcessNode) => {
-            var _a;
-            if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                const InnerBlocks = (React__default["default"].createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [], render: render }));
-                let topLevelFound = false;
-                return convertHtmlToReact__default["default"](block.originalContent || '', {
-                    transform: (node, i) => {
-                        var _a, _b, _c, _d, _e, _f;
-                        if (i === 0 && !topLevelFound) {
-                            topLevelFound = true;
-                            if (!((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.class)) {
-                                if (!node.attribs) {
-                                    node.attribs = {};
+    const inlineStylesheets = blocks
+        .filter((block) => !!block.inlineStylesheet)
+        .map((block) => block.inlineStylesheet);
+    return (React__default["default"].createElement(React__default["default"].Fragment, null,
+        !!inlineStylesheets.length && (React__default["default"].createElement(reactHelmet.Helmet, null, inlineStylesheets.map((stylesheet, i) => (React__default["default"].createElement("style", { key: i, dangerouslySetInnerHTML: { __html: stylesheet } }))))),
+        blocks.map((block) => {
+            var _a, _b;
+            const component = render === null || render === void 0 ? void 0 : render(block);
+            if (component) {
+                return component;
+            }
+            const processNode = (shouldProcessNode) => {
+                var _a;
+                if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
+                    const InnerBlocks = (React__default["default"].createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [], render: render }));
+                    let topLevelFound = false;
+                    return convertHtmlToReact__default["default"](block.originalContent || '', {
+                        transform: (node, i) => {
+                            var _a, _b, _c, _d, _e, _f;
+                            if (i === 0 && !topLevelFound) {
+                                topLevelFound = true;
+                                if (!((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.class)) {
+                                    if (!node.attribs) {
+                                        node.attribs = {};
+                                    }
+                                }
+                                if ((_c = (_b = block.attributes) === null || _b === void 0 ? void 0 : _b.layout) === null || _c === void 0 ? void 0 : _c.type) {
+                                    node.attribs.class = `${node.attribs.class} is-layout-${(_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type}`;
+                                }
+                                if (block.inlineClassnames) {
+                                    node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                                }
+                                if (block.name === 'core/cover' &&
+                                    block.attributes.useFeaturedImage) {
+                                    node.attribs.style = `background-image:url(${block.attributes.url});`;
+                                    if (!block.attributes.hasParallax) {
+                                        node.attribs.style = `${node.attribs.style}background-size: cover;`;
+                                    }
+                                }
+                                if (block.name === 'core/buttons' ||
+                                    block.name === 'core/columns' ||
+                                    block.name === 'core/social-links' ||
+                                    block.name === 'core/gallery') {
+                                    node.attribs.class = `${node.attribs.class} is-layout-flex`;
                                 }
                             }
-                            if ((_c = (_b = block.attributes) === null || _b === void 0 ? void 0 : _b.layout) === null || _c === void 0 ? void 0 : _c.type) {
-                                node.attribs.class = `${node.attribs.class} is-layout-${(_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type}`;
+                            // FIX when children have no data value,
+                            // it doesn't correctly "convertNodeToReactElement" / doesn't render
+                            if (!((_f = node.children) === null || _f === void 0 ? void 0 : _f.length)) {
+                                node.children = [
+                                    {
+                                        data: '\n',
+                                    },
+                                ];
                             }
-                            if (block.inlineClassnames) {
-                                node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                            if (shouldProcessNode(node)) {
+                                return convertHtmlToReact.convertNodeToReactElement(node, i, () => InnerBlocks);
                             }
-                            if (block.name === 'core/cover' &&
-                                block.attributes.useFeaturedImage) {
-                                node.attribs.style = `background-image:url(${block.attributes.url});`;
-                                if (!block.attributes.hasParallax) {
-                                    node.attribs.style = `${node.attribs.style}background-size: cover;`;
-                                }
-                            }
-                            if (block.name === 'core/buttons' ||
-                                block.name === 'core/columns' ||
-                                block.name === 'core/social-links' ||
-                                block.name === 'core/gallery') {
-                                node.attribs.class = `${node.attribs.class} is-layout-flex`;
-                            }
-                        }
-                        // FIX when children have no data value,
-                        // it doesn't correctly "convertNodeToReactElement" / doesn't render
-                        if (!((_f = node.children) === null || _f === void 0 ? void 0 : _f.length)) {
-                            node.children = [
-                                {
-                                    data: '\n',
-                                },
-                            ];
-                        }
-                        if (shouldProcessNode(node)) {
-                            return convertHtmlToReact.convertNodeToReactElement(node, i, () => InnerBlocks);
-                        }
+                        },
+                    });
+                }
+                return (React__default["default"].createElement(React.Fragment, { key: block.id }, convertHtmlToReact__default["default"](block.originalContent || block.dynamicContent || '', {
+                    transform: (node, index) => {
+                        return convertHtmlToReact.convertNodeToReactElement(node, index);
                     },
-                });
-            }
-            return (React__default["default"].createElement(React.Fragment, { key: block.id }, convertHtmlToReact__default["default"](block.originalContent || block.dynamicContent || '', {
-                transform: (node, index) => {
-                    return convertHtmlToReact.convertNodeToReactElement(node, index);
-                },
-            })));
-        };
-        if (!block.originalContent &&
-            block.dynamicContent &&
-            !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
-            return processNode(() => true);
-        }
-        if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
-            return (React__default["default"].createElement("div", { key: block.id },
-                React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks, render: render })));
-        }
-        switch (block.name) {
-            case 'core/media-text': {
-                return processNode((node) => hasClass(node, 'wp-block-media-text__content'));
-            }
-            case 'core/cover': {
-                return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
-            }
-            default: {
+                })));
+            };
+            if (!block.originalContent &&
+                block.dynamicContent &&
+                !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
                 return processNode(() => true);
             }
-        }
-    })));
+            if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
+                return (React__default["default"].createElement("div", { key: block.id },
+                    React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks, render: render })));
+            }
+            switch (block.name) {
+                case 'core/media-text': {
+                    return processNode((node) => hasClass(node, 'wp-block-media-text__content'));
+                }
+                case 'core/cover': {
+                    return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
+                }
+                default: {
+                    return processNode(() => true);
+                }
+            }
+        })));
 };
 const RootBlockRenderer = ({ blocks = [], render, }) => {
     return (React__default["default"].createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
