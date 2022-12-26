@@ -20,7 +20,7 @@ const hasClass = (nd, className) => {
     return (!!((_a = nd.attribs) === null || _a === void 0 ? void 0 : _a.class) &&
         ((_c = (_b = nd.attribs) === null || _b === void 0 ? void 0 : _b.class) === null || _c === void 0 ? void 0 : _c.split(' ').find((c) => c === className)));
 };
-const Blocks = ({ blocks = [], render }) => {
+const BlockRenderer = ({ blocks = [], render }) => {
     return (React.createElement(React.Fragment, null, blocks.map((block) => {
         var _a, _b;
         const component = render === null || render === void 0 ? void 0 : render(block);
@@ -35,7 +35,7 @@ const Blocks = ({ blocks = [], render }) => {
         const processNode = (shouldProcessNode) => {
             var _a;
             if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                const InnerBlocks = (React.createElement(Blocks, { key: block.id, blocks: block.innerBlocks || [], render: render }));
+                const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [], render: render }));
                 let topLevelFound = false;
                 return convertHtmlToReact(block.originalContent || '', {
                     transform: (node, i) => {
@@ -96,7 +96,7 @@ const Blocks = ({ blocks = [], render }) => {
         }
         if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
             return (React.createElement("div", { key: block.id },
-                React.createElement(Blocks, { blocks: block.innerBlocks, render: render })));
+                React.createElement(BlockRenderer, { blocks: block.innerBlocks, render: render })));
         }
         switch (block.name) {
             case 'core/media-text': {
@@ -111,11 +111,11 @@ const Blocks = ({ blocks = [], render }) => {
         }
     })));
 };
-const BlockRenderer = ({ blocks = [], render }) => {
-    return (React.createElement("div", { className: "wp-site-blocks" },
+const RootBlockRenderer = ({ blocks = [], render, }) => {
+    return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
         React.createElement("main", { className: "is-layout-flow wp-block-group" },
             React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
-                React.createElement(Blocks, { blocks: blocks, render: render })))));
+                React.createElement(BlockRenderer, { blocks: blocks, render: render })))));
 };
 
 const assignIds = (blocks) => {
@@ -132,5 +132,5 @@ const assignIds = (blocks) => {
     return blocks;
 };
 
-export { BlockRenderer, Blocks, assignIds };
+export { BlockRenderer, RootBlockRenderer, assignIds };
 //# sourceMappingURL=index.js.map

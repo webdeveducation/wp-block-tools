@@ -17,7 +17,7 @@ const hasClass = (nd: any, className: string) => {
   );
 };
 
-export const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
+export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
   return (
     <>
       {blocks.map((block) => {
@@ -35,7 +35,7 @@ export const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
         const processNode = (shouldProcessNode: any) => {
           if (block.innerBlocks?.length) {
             const InnerBlocks = (
-              <Blocks
+              <BlockRenderer
                 key={block.id}
                 blocks={block.innerBlocks || []}
                 render={render}
@@ -121,7 +121,7 @@ export const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
         if (!block.originalContent && block.innerBlocks?.length) {
           return (
             <div key={block.id}>
-              <Blocks blocks={block.innerBlocks} render={render} />
+              <BlockRenderer blocks={block.innerBlocks} render={render} />
             </div>
           );
         }
@@ -146,12 +146,15 @@ export const Blocks = ({ blocks = [], render }: BlockRendererProps) => {
   );
 };
 
-export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
+export const RootBlockRenderer = ({
+  blocks = [],
+  render,
+}: BlockRendererProps) => {
   return (
-    <div className="wp-site-blocks">
+    <div className="wp-site-blocks" style={{ paddingTop: 0 }}>
       <main className="is-layout-flow wp-block-group">
         <div className="has-global-padding is-layout-constrained entry-content wp-block-post-content">
-          <Blocks blocks={blocks} render={render} />
+          <BlockRenderer blocks={blocks} render={render} />
         </div>
       </main>
     </div>

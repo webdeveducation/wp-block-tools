@@ -29,7 +29,7 @@ const hasClass = (nd, className) => {
     return (!!((_a = nd.attribs) === null || _a === void 0 ? void 0 : _a.class) &&
         ((_c = (_b = nd.attribs) === null || _b === void 0 ? void 0 : _b.class) === null || _c === void 0 ? void 0 : _c.split(' ').find((c) => c === className)));
 };
-const Blocks = ({ blocks = [], render }) => {
+const BlockRenderer = ({ blocks = [], render }) => {
     return (React__default["default"].createElement(React__default["default"].Fragment, null, blocks.map((block) => {
         var _a, _b;
         const component = render === null || render === void 0 ? void 0 : render(block);
@@ -44,7 +44,7 @@ const Blocks = ({ blocks = [], render }) => {
         const processNode = (shouldProcessNode) => {
             var _a;
             if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                const InnerBlocks = (React__default["default"].createElement(Blocks, { key: block.id, blocks: block.innerBlocks || [], render: render }));
+                const InnerBlocks = (React__default["default"].createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [], render: render }));
                 let topLevelFound = false;
                 return convertHtmlToReact__default["default"](block.originalContent || '', {
                     transform: (node, i) => {
@@ -105,7 +105,7 @@ const Blocks = ({ blocks = [], render }) => {
         }
         if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
             return (React__default["default"].createElement("div", { key: block.id },
-                React__default["default"].createElement(Blocks, { blocks: block.innerBlocks, render: render })));
+                React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks, render: render })));
         }
         switch (block.name) {
             case 'core/media-text': {
@@ -120,11 +120,11 @@ const Blocks = ({ blocks = [], render }) => {
         }
     })));
 };
-const BlockRenderer = ({ blocks = [], render }) => {
-    return (React__default["default"].createElement("div", { className: "wp-site-blocks" },
+const RootBlockRenderer = ({ blocks = [], render, }) => {
+    return (React__default["default"].createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
         React__default["default"].createElement("main", { className: "is-layout-flow wp-block-group" },
             React__default["default"].createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
-                React__default["default"].createElement(Blocks, { blocks: blocks, render: render })))));
+                React__default["default"].createElement(BlockRenderer, { blocks: blocks, render: render })))));
 };
 
 const assignIds = (blocks) => {
@@ -142,6 +142,6 @@ const assignIds = (blocks) => {
 };
 
 exports.BlockRenderer = BlockRenderer;
-exports.Blocks = Blocks;
+exports.RootBlockRenderer = RootBlockRenderer;
 exports.assignIds = assignIds;
 //# sourceMappingURL=index.js.map
