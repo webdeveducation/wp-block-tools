@@ -91,7 +91,6 @@ const BlockRenderer = ({ blocks = [], render }) => {
         if (!block.originalContent &&
             block.dynamicContent &&
             !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
-            console.log('FALL INTO HERE: ', block);
             return processNode(() => true);
         }
         if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
