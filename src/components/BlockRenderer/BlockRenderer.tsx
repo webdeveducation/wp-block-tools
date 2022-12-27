@@ -28,10 +28,7 @@ export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
       {!!inlineStylesheets.length && (
         <Helmet>
           {inlineStylesheets.map((stylesheet, i) => (
-            <style
-              key={i}
-              dangerouslySetInnerHTML={{ __html: stylesheet || '' }}
-            />
+            <style key={i}>{stylesheet}</style>
           ))}
         </Helmet>
       )}

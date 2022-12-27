@@ -26,7 +26,7 @@ const BlockRenderer = ({ blocks = [], render }) => {
         .filter((block) => !!block.inlineStylesheet)
         .map((block) => block.inlineStylesheet);
     return (React.createElement(React.Fragment, null,
-        !!inlineStylesheets.length && (React.createElement(Helmet, null, inlineStylesheets.map((stylesheet, i) => (React.createElement("style", { key: i, dangerouslySetInnerHTML: { __html: stylesheet || '' } }))))),
+        !!inlineStylesheets.length && (React.createElement(Helmet, null, inlineStylesheets.map((stylesheet, i) => (React.createElement("style", { key: i }, stylesheet))))),
         blocks.map((block) => {
             var _a, _b;
             const component = render === null || render === void 0 ? void 0 : render(block);
@@ -119,6 +119,7 @@ const RootBlockRenderer = ({ blocks = [], render, }) => {
 };
 
 const assignIds = (blocks) => {
+    const blocksCopy = [...blocks];
     const assignId = (b) => {
         b.forEach((block) => {
             var _a;
@@ -128,8 +129,8 @@ const assignIds = (blocks) => {
             }
         });
     };
-    assignId(blocks);
-    return blocks;
+    assignId(blocksCopy);
+    return blocksCopy;
 };
 
 const getBorderRadiusStyle = (attributes) => {
