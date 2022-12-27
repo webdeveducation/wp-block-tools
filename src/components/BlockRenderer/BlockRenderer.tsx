@@ -9,6 +9,10 @@ import './style.scss';
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
   render?: (block: IBlockBase) => React.ReactElement | null;
+  customInternalLinkComponent?: {
+    render: (n: any, index: string | number) => React.ReactElement | null;
+    siteDomain: string;
+  };
 };
 
 const hasClass = (nd: any, className: string) => {
@@ -18,7 +22,11 @@ const hasClass = (nd: any, className: string) => {
   );
 };
 
-export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
+export const BlockRenderer = ({
+  blocks = [],
+  render,
+  customInternalLinkComponent,
+}: BlockRendererProps) => {
   const inlineStylesheets = blocks
     .filter((block) => !!block.inlineStylesheet)
     .map((block) => block.inlineStylesheet);
@@ -33,6 +41,7 @@ export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
         </Helmet>
       )}
       {blocks.map((block) => {
+        // render custom component for this block if exists
         const component = render?.(block);
         if (component) {
           return component;
@@ -45,6 +54,7 @@ export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
                 key={block.id}
                 blocks={block.innerBlocks || []}
                 render={render}
+                customInternalLinkComponent={customInternalLinkComponent}
               />
             );
             let topLevelFound = false;
@@ -106,8 +116,34 @@ export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
               {convertHtmlToReact(
                 block.originalContent || block.dynamicContent || '',
                 {
-                  transform: (node, index) => {
-                    return convertNodeToReactElement(node, index);
+                  transform: (node: any, index) => {
+                    return convertNodeToReactElement(
+                      node,
+                      index,
+                      function transform(n: any, i) {
+                        // process if anchor tag and has customInternalLinkComponent
+                        if (
+                          n.name === 'a' &&
+                          customInternalLinkComponent?.render &&
+                          customInternalLinkComponent?.siteDomain &&
+                          n.attribs.href.indexOf(
+                            customInternalLinkComponent.siteDomain
+                          ) === 0
+                        ) {
+                          const reactElement: any = convertNodeToReactElement(
+                            n,
+                            i
+                          );
+                          return customInternalLinkComponent.render(
+                            {
+                              ...(n.attribs || {}),
+                              children: reactElement.props.children,
+                            },
+                            i
+                          );
+                        }
+                      }
+                    );
                   },
                 }
               )}
@@ -154,12 +190,17 @@ export const BlockRenderer = ({ blocks = [], render }: BlockRendererProps) => {
 export const RootBlockRenderer = ({
   blocks = [],
   render,
+  customInternalLinkComponent,
 }: BlockRendererProps) => {
   return (
     <div className="wp-site-blocks" style={{ paddingTop: 0 }}>
       <main className="is-layout-flow wp-block-group">
         <div className="has-global-padding is-layout-constrained entry-content wp-block-post-content">
-          <BlockRenderer blocks={blocks} render={render} />
+          <BlockRenderer
+            blocks={blocks}
+            render={render}
+            customInternalLinkComponent={customInternalLinkComponent}
+          />
         </div>
       </main>
     </div>

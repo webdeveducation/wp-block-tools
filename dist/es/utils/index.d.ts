@@ -9,3 +9,4 @@ export * from './getBackgroundStyle';
 export * from './getTextStyle';
 export * from './parseValue';
 export * from './assignGatsbyImage';
+export * from './getClasses';
