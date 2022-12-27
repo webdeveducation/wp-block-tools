@@ -8,3 +8,4 @@ export * from './getTypographyStyle';
 export * from './getBackgroundStyle';
 export * from './getTextStyle';
 export * from './parseValue';
+export * from './assignGatsbyImage';

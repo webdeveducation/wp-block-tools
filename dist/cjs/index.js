@@ -298,8 +298,98 @@ const getStyles = (attributes) => {
     return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes));
 };
 
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, coreCover, }) => __awaiter(void 0, void 0, void 0, function* () {
+    const blocksCopy = [...blocks];
+    const imagesToRetrieve = [];
+    const addedImages = {};
+    const retrieveGatsbyImage = (b) => {
+        var _a;
+        for (let i = 0; i < b.length; i++) {
+            const block = b[i];
+            if ((coreImage && block.name === 'core/image') ||
+                (coreCover && block.name === 'core/cover') ||
+                (coreMediaText && block.name === 'core/media-text')) {
+                const id = block.attributes.id || block.attributes.mediaId;
+                const width = block.attributes.width;
+                if (!addedImages[id]) {
+                    const queryString = `
+          query ImageQuery {
+            wpMediaItem(databaseId: { eq: ${id} }) {
+              databaseId
+              gatsbyImage(width: ${width})
+            }
+          }
+        `;
+                    const query = graphql(queryString);
+                    imagesToRetrieve.push(query);
+                    addedImages[id] = true;
+                }
+            }
+            if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
+                retrieveGatsbyImage(block.innerBlocks);
+            }
+        }
+    };
+    retrieveGatsbyImage(blocksCopy);
+    const images = yield Promise.allSettled(imagesToRetrieve);
+    const imagesMap = {};
+    images
+        .filter((image) => { var _a; return !!((_a = image.value.data) === null || _a === void 0 ? void 0 : _a.wpMediaItem); })
+        .forEach((image) => {
+        if (image.status === 'fulfilled') {
+            const { databaseId, gatsbyImage } = image.value.data.wpMediaItem;
+            imagesMap[databaseId] = {
+                databaseId,
+                gatsbyImage,
+            };
+        }
+    });
+    const setGatsbyImage = (b) => {
+        b.forEach((block) => {
+            var _a, _b;
+            if ((coreImage && block.name === 'core/image') ||
+                (coreCover && block.name === 'core/cover') ||
+                (coreMediaText && block.name === 'core/media-text')) {
+                const id = block.attributes.id || block.attributes.mediaId;
+                block.attributes.gatsbyImage = (_a = imagesMap[id]) === null || _a === void 0 ? void 0 : _a.gatsbyImage;
+            }
+            if ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length) {
+                setGatsbyImage(block.innerBlocks);
+            }
+        });
+    };
+    setGatsbyImage(blocksCopy);
+    return blocksCopy;
+});
+
 exports.BlockRenderer = BlockRenderer;
 exports.RootBlockRenderer = RootBlockRenderer;
+exports.assignGatsbyImage = assignGatsbyImage;
 exports.assignIds = assignIds;
 exports.getBackgroundStyle = getBackgroundStyle;
 exports.getBorderRadiusStyle = getBorderRadiusStyle;
