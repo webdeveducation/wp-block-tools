@@ -22,7 +22,10 @@ const rollup = {
     },
   ],
   plugins: [
-    sass({ insert: true }),
+    sass({
+      outputStyle: 'compressed',
+      output: './dist/css/style.css',
+    }),
     typescript({ objectHashIgnoreUnknownHack: true }),
   ],
   external: ['react', 'react-dom'],
