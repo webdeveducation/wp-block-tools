@@ -33,7 +33,7 @@ export const assignGatsbyImage = async ({
             query ImageQuery${id} {
               wpMediaItem(databaseId: { eq: ${id} }) {
                 databaseId
-                gatsbyImage(width: ${width})
+                gatsbyImage(width: ${Math.min(width, 1200)})
               }
             }
           `);
