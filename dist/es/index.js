@@ -344,7 +344,7 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
             query ImageQuery${id} {
               wpMediaItem(databaseId: { eq: ${id} }) {
                 databaseId
-                gatsbyImage(width: ${width})
+                gatsbyImage(width: ${Math.min(width, 1200)})
               }
             }
           `);
