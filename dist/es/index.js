@@ -324,7 +324,10 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
                 (coreCover && block.name === 'core/cover') ||
                 (coreMediaText && block.name === 'core/media-text')) {
                 const id = block.attributes.id || block.attributes.mediaId;
-                const width = block.attributes.width;
+                let width = block.attributes.width;
+                if (block.name === 'core/media-text') {
+                    width = 1200 * ((block.attributes.mediaWidth || 50) / 100);
+                }
                 if (!!id && !addedImages[id]) {
                     try {
                         const query = graphql(`
