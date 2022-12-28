@@ -348,18 +348,22 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
                 (coreMediaText && block.name === 'core/media-text')) {
                 const id = block.attributes.id || block.attributes.mediaId;
                 const width = block.attributes.width;
-                if (!addedImages[id]) {
-                    const queryString = `
-          query ImageQuery {
-            wpMediaItem(databaseId: { eq: ${id} }) {
-              databaseId
-              gatsbyImage(width: ${width})
+                if (!!id && !addedImages[id]) {
+                    try {
+                        const query = graphql(`
+            query ImageQuery${id} {
+              wpMediaItem(databaseId: { eq: ${id} }) {
+                databaseId
+                gatsbyImage(width: ${width})
+              }
             }
-          }
-        `;
-                    const query = graphql(queryString);
-                    imagesToRetrieve.push(query);
-                    addedImages[id] = true;
+          `);
+                        imagesToRetrieve.push(query);
+                        addedImages[id] = true;
+                    }
+                    catch (e) {
+                        console.log('ERROR: ', e);
+                    }
                 }
             }
             if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
