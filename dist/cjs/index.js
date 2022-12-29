@@ -320,10 +320,12 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
+const getAlias = (blockId = '') => {
+    return `A${blockId.split('-').join('')}`;
+};
 const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, coreCover, }) => __awaiter(void 0, void 0, void 0, function* () {
     const blocksCopy = [...blocks];
     const imagesToRetrieve = [];
-    const addedImages = {};
     const retrieveGatsbyImage = (b) => {
         var _a;
         for (let i = 0; i < b.length; i++) {
@@ -334,20 +336,22 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
                 const id = block.attributes.id || block.attributes.mediaId;
                 let width = block.attributes.width;
                 if (block.name === 'core/media-text') {
-                    width = 1200 * ((block.attributes.mediaWidth || 50) / 100);
+                    width = Math.ceil(1200 * ((block.attributes.mediaWidth || 50) / 100));
                 }
-                if (!!id && !addedImages[id]) {
+                if (block.name === 'core/image') {
+                    width = 600;
+                }
+                if (!!id && !!block.id) {
                     try {
                         const query = graphql(`
-            query ImageQuery${id} {
-              wpMediaItem(databaseId: { eq: ${id} }) {
-                databaseId
-                gatsbyImage(width: ${Math.min(width, 1200)})
+              query ImageQuery${id} {
+                ${getAlias(block.id)}: wpMediaItem(databaseId: { eq: ${id} }) {
+                  databaseId
+                  gatsbyImage(width: ${Math.min(width, 1200)})
+                }
               }
-            }
-          `);
+            `);
                         imagesToRetrieve.push(query);
-                        addedImages[id] = true;
                     }
                     catch (e) {
                         console.log('ERROR: ', e);
@@ -363,11 +367,15 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
     const images = yield Promise.allSettled(imagesToRetrieve);
     const imagesMap = {};
     images
-        .filter((image) => { var _a; return !!((_a = image.value.data) === null || _a === void 0 ? void 0 : _a.wpMediaItem); })
+        .filter((image) => {
+        const key = Object.keys(image.value.data)[0];
+        return !!image.value.data[key];
+    })
         .forEach((image) => {
         if (image.status === 'fulfilled') {
-            const { databaseId, gatsbyImage } = image.value.data.wpMediaItem;
-            imagesMap[databaseId] = {
+            const key = Object.keys(image.value.data)[0];
+            const { databaseId, gatsbyImage } = image.value.data[key];
+            imagesMap[key] = {
                 databaseId,
                 gatsbyImage,
             };
@@ -376,11 +384,11 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
     const setGatsbyImage = (b) => {
         b.forEach((block) => {
             var _a, _b;
-            if ((coreImage && block.name === 'core/image') ||
+            if ((block.id && coreImage && block.name === 'core/image') ||
                 (coreCover && block.name === 'core/cover') ||
                 (coreMediaText && block.name === 'core/media-text')) {
-                const id = block.attributes.id || block.attributes.mediaId;
-                block.attributes.gatsbyImage = (_a = imagesMap[id]) === null || _a === void 0 ? void 0 : _a.gatsbyImage;
+                block.attributes.gatsbyImage =
+                    (_a = imagesMap[getAlias(block.id)]) === null || _a === void 0 ? void 0 : _a.gatsbyImage;
             }
             if ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length) {
                 setGatsbyImage(block.innerBlocks);
