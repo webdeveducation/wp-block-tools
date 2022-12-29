@@ -369,7 +369,7 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
     images
         .filter((image) => {
         const key = Object.keys(image.value.data || {})[0];
-        return !!image.value.data[key];
+        return !!key && !!image.value.data[key];
     })
         .forEach((image) => {
         if (image.status === 'fulfilled') {
