@@ -1,7 +1,9 @@
 import React, { useContext } from 'react';
+import { RootBlockRenderer } from '../components';
 import { IBlockBase } from '../types';
 
 export type IBlockRendererContext = {
+  allBlocks: IBlockBase[];
   renderComponent?: (block: IBlockBase) => React.ReactElement | null;
   customInternalLinkComponent?: (
     n: any,
@@ -10,19 +12,25 @@ export type IBlockRendererContext = {
   siteDomain?: string;
 };
 
-export const BlockRendererContext = React.createContext<IBlockRendererContext>(
-  {}
-);
+export const BlockRendererContext = React.createContext<IBlockRendererContext>({
+  allBlocks: [],
+});
 export const BlockRendererProvider = ({
   renderComponent,
   customInternalLinkComponent,
   siteDomain,
+  allBlocks,
   children,
-}: IBlockRendererContext & { children: JSX.Element }) => (
+}: IBlockRendererContext & { children?: JSX.Element }) => (
   <BlockRendererContext.Provider
-    value={{ renderComponent, customInternalLinkComponent, siteDomain }}
+    value={{
+      renderComponent,
+      customInternalLinkComponent,
+      siteDomain,
+      allBlocks,
+    }}
   >
-    {children}
+    {children ? children : <RootBlockRenderer />}
   </BlockRendererContext.Provider>
 );
 export const useBlockRendererContext = () => {

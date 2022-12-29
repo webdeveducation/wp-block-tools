@@ -10,4 +10,5 @@ export * from './getMediaTextWidthStyle';
 export * from './getTextStyle';
 export * from './parseValue';
 export * from './assignGatsbyImage';
+export * from './getBlockById';
 export * from './getClasses';

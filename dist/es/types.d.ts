@@ -1,5 +1,6 @@
 export interface IBlockBase {
     id?: string;
+    parentId?: string;
     name: string;
     attributes: {
         [key: string]: any;

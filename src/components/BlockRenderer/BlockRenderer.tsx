@@ -1,26 +1,20 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import convertHtmlToReact, {
   convertNodeToReactElement,
 } from '@hedgedoc/html-to-react';
 import { IBlockBase } from '../../types';
 import { Helmet } from 'react-helmet';
-import './style.scss';
 import { useBlockRendererContext } from '../../context';
+import { TerminalBlock } from './TerminalBlock';
+import './style.scss';
+import { hasClass } from '../../utils/hasClass';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
 };
 
-const hasClass = (nd: any, className: string) => {
-  return (
-    !!nd.attribs?.class &&
-    nd.attribs?.class?.split(' ').find((c: string) => c === className)
-  );
-};
-
 export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
-  const { renderComponent, customInternalLinkComponent, siteDomain } =
-    useBlockRendererContext();
+  const { renderComponent } = useBlockRendererContext();
 
   const inlineStylesheets = blocks
     .filter((block) => !!block.inlineStylesheet)
@@ -47,34 +41,18 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
             const InnerBlocks = (
               <BlockRenderer key={block.id} blocks={block.innerBlocks || []} />
             );
-            let topLevelFound = false;
+            let isRootNode = false;
             return convertHtmlToReact(block.originalContent || '', {
               transform: (node: any, i) => {
-                if (i === 0 && !topLevelFound) {
-                  topLevelFound = true;
-                  if (!node.attribs?.class) {
-                    if (!node.attribs) {
-                      node.attribs = {};
-                    }
+                if (!node.attribs?.class) {
+                  if (!node.attribs) {
+                    node.attribs = {};
                   }
+                }
 
-                  if (block.attributes?.layout?.type) {
-                    node.attribs.class = `${node.attribs.class} is-layout-${block.attributes?.layout?.type}`;
-                  }
-
-                  if (block.inlineClassnames) {
-                    node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
-                  }
-
-                  if (
-                    block.name === 'core/cover' &&
-                    block.attributes.useFeaturedImage
-                  ) {
-                    node.attribs.style = `background-image:url(${block.attributes.url});`;
-                    if (!block.attributes.hasParallax) {
-                      node.attribs.style = `${node.attribs.style}background-size: cover;`;
-                    }
-                  }
+                // process top level blocks that require is-layout-flex class
+                if (i === 0 && !isRootNode) {
+                  isRootNode = true;
 
                   if (
                     block.name === 'core/buttons' ||
@@ -84,6 +62,28 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                   ) {
                     node.attribs.class = `${node.attribs.class} is-layout-flex`;
                   }
+                }
+
+                if (block.attributes?.layout?.type) {
+                  node.attribs.class = `${node.attribs.class} is-layout-${block.attributes?.layout?.type}`;
+                }
+
+                if (block.inlineClassnames) {
+                  node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                }
+
+                if (
+                  block.name === 'core/cover' &&
+                  block.attributes.useFeaturedImage
+                ) {
+                  node.attribs.style = `background-image:url(${block.attributes.url});`;
+                  if (!block.attributes.hasParallax) {
+                    node.attribs.style = `${node.attribs.style}background-size: cover;`;
+                  }
+                }
+
+                if (block.name === 'core/social-link') {
+                  console.log('SOCIAL LINK: ', block);
                 }
 
                 // FIX when children have no data value,
@@ -100,52 +100,10 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                 }
               },
             });
+          } else {
+            // if no innerBlocks
+            return <TerminalBlock key={block.id} block={block} />;
           }
-          return (
-            <Fragment key={block.id}>
-              {convertHtmlToReact(
-                block.originalContent || block.dynamicContent || '',
-                {
-                  transform: (node: any, index) => {
-                    return convertNodeToReactElement(
-                      node,
-                      index,
-                      function transform(n: any, i) {
-                        // process if anchor tag and has customInternalLinkComponent
-                        if (
-                          n.name === 'a' &&
-                          customInternalLinkComponent &&
-                          siteDomain &&
-                          (n.attribs.href
-                            .replace('http://', '')
-                            .indexOf(siteDomain) === 0 ||
-                            n.attribs.href
-                              .replace('https://', '')
-                              .indexOf(siteDomain) === 0)
-                        ) {
-                          const reactElement: any = convertNodeToReactElement(
-                            n,
-                            i
-                          );
-                          return customInternalLinkComponent(
-                            {
-                              ...(n.attribs || {}),
-                              internalHref: n.attribs.href
-                                .replace('http://', '')
-                                .replace('https://', '')
-                                .replace(siteDomain, ''),
-                              children: reactElement.props.children,
-                            },
-                            i
-                          );
-                        }
-                      }
-                    );
-                  },
-                }
-              )}
-            </Fragment>
-          );
         };
 
         if (
@@ -185,11 +143,12 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
 };
 
 export const RootBlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
+  const { allBlocks } = useBlockRendererContext();
   return (
     <div className="wp-site-blocks" style={{ paddingTop: 0 }}>
       <main className="is-layout-flow wp-block-group">
         <div className="has-global-padding is-layout-constrained entry-content wp-block-post-content">
-          <BlockRenderer blocks={blocks} />
+          <BlockRenderer blocks={allBlocks || blocks} />
         </div>
       </main>
     </div>

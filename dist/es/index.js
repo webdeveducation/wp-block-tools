@@ -1,146 +1,36 @@
 import React, { useContext, Fragment } from 'react';
-import convertHtmlToReact, { convertNodeToReactElement } from '@hedgedoc/html-to-react';
+import convertHtmlToReact$1, { convertNodeToReactElement } from '@hedgedoc/html-to-react';
 import { Helmet } from 'react-helmet';
+import { convertHtmlToReact } from '@hedgedoc/html-to-react/dist/convertHtmlToReact';
 import { v4 } from 'uuid';
 import { camelCase } from 'change-case';
 import parse from 'html-dom-parser';
 
-const BlockRendererContext = React.createContext({});
-const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, children, }) => (React.createElement(BlockRendererContext.Provider, { value: { renderComponent, customInternalLinkComponent, siteDomain } }, children));
+const BlockRendererContext = React.createContext({
+    allBlocks: [],
+});
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, allBlocks, children, }) => (React.createElement(BlockRendererContext.Provider, { value: {
+        renderComponent,
+        customInternalLinkComponent,
+        siteDomain,
+        allBlocks,
+    } }, children ? children : React.createElement(RootBlockRenderer, null)));
 const useBlockRendererContext = () => {
     const blockRendererContext = useContext(BlockRendererContext);
     return blockRendererContext;
 };
 
-const hasClass = (nd, className) => {
-    var _a, _b, _c;
-    return (!!((_a = nd.attribs) === null || _a === void 0 ? void 0 : _a.class) &&
-        ((_c = (_b = nd.attribs) === null || _b === void 0 ? void 0 : _b.class) === null || _c === void 0 ? void 0 : _c.split(' ').find((c) => c === className)));
-};
-const BlockRenderer = ({ blocks = [] }) => {
-    const { renderComponent, customInternalLinkComponent, siteDomain } = useBlockRendererContext();
-    const inlineStylesheets = blocks
-        .filter((block) => !!block.inlineStylesheet)
-        .map((block) => block.inlineStylesheet);
-    return (React.createElement(React.Fragment, null,
-        !!inlineStylesheets.length && (React.createElement(Helmet, null, inlineStylesheets.map((stylesheet, i) => (React.createElement("style", { key: i }, stylesheet))))),
-        blocks.map((block) => {
-            var _a, _b;
-            // render custom component for this block if exists
-            const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent(block);
-            if (component) {
-                return component;
-            }
-            const processNode = (shouldProcessNode) => {
-                var _a;
-                if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                    const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [] }));
-                    let topLevelFound = false;
-                    return convertHtmlToReact(block.originalContent || '', {
-                        transform: (node, i) => {
-                            var _a, _b, _c, _d, _e, _f;
-                            if (i === 0 && !topLevelFound) {
-                                topLevelFound = true;
-                                if (!((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.class)) {
-                                    if (!node.attribs) {
-                                        node.attribs = {};
-                                    }
-                                }
-                                if ((_c = (_b = block.attributes) === null || _b === void 0 ? void 0 : _b.layout) === null || _c === void 0 ? void 0 : _c.type) {
-                                    node.attribs.class = `${node.attribs.class} is-layout-${(_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type}`;
-                                }
-                                if (block.inlineClassnames) {
-                                    node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
-                                }
-                                if (block.name === 'core/cover' &&
-                                    block.attributes.useFeaturedImage) {
-                                    node.attribs.style = `background-image:url(${block.attributes.url});`;
-                                    if (!block.attributes.hasParallax) {
-                                        node.attribs.style = `${node.attribs.style}background-size: cover;`;
-                                    }
-                                }
-                                if (block.name === 'core/buttons' ||
-                                    block.name === 'core/columns' ||
-                                    block.name === 'core/social-links' ||
-                                    block.name === 'core/gallery') {
-                                    node.attribs.class = `${node.attribs.class} is-layout-flex`;
-                                }
-                            }
-                            // FIX when children have no data value,
-                            // it doesn't correctly "convertNodeToReactElement" / doesn't render
-                            if (!((_f = node.children) === null || _f === void 0 ? void 0 : _f.length)) {
-                                node.children = [
-                                    {
-                                        data: '\n',
-                                    },
-                                ];
-                            }
-                            if (shouldProcessNode(node)) {
-                                return convertNodeToReactElement(node, i, () => InnerBlocks);
-                            }
-                        },
-                    });
-                }
-                return (React.createElement(Fragment, { key: block.id }, convertHtmlToReact(block.originalContent || block.dynamicContent || '', {
-                    transform: (node, index) => {
-                        return convertNodeToReactElement(node, index, function transform(n, i) {
-                            // process if anchor tag and has customInternalLinkComponent
-                            if (n.name === 'a' &&
-                                customInternalLinkComponent &&
-                                siteDomain &&
-                                (n.attribs.href
-                                    .replace('http://', '')
-                                    .indexOf(siteDomain) === 0 ||
-                                    n.attribs.href
-                                        .replace('https://', '')
-                                        .indexOf(siteDomain) === 0)) {
-                                const reactElement = convertNodeToReactElement(n, i);
-                                return customInternalLinkComponent(Object.assign(Object.assign({}, (n.attribs || {})), { internalHref: n.attribs.href
-                                        .replace('http://', '')
-                                        .replace('https://', '')
-                                        .replace(siteDomain, ''), children: reactElement.props.children }), i);
-                            }
-                        });
-                    },
-                })));
-            };
-            if (!block.originalContent &&
-                block.dynamicContent &&
-                !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
-                return processNode(() => true);
-            }
-            if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
-                return (React.createElement("div", { key: block.id },
-                    React.createElement(BlockRenderer, { blocks: block.innerBlocks })));
-            }
-            switch (block.name) {
-                case 'core/media-text': {
-                    return processNode((node) => hasClass(node, 'wp-block-media-text__content'));
-                }
-                case 'core/cover': {
-                    return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
-                }
-                default: {
-                    return processNode(() => true);
-                }
-            }
-        })));
-};
-const RootBlockRenderer = ({ blocks = [] }) => {
-    return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
-        React.createElement("main", { className: "is-layout-flow wp-block-group" },
-            React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
-                React.createElement(BlockRenderer, { blocks: blocks })))));
-};
-
 const assignIds = (blocks) => {
     const blocksCopy = [...blocks];
-    const assignId = (b) => {
+    const assignId = (b, parentId) => {
         b.forEach((block) => {
             var _a;
             block.id = v4();
+            if (parentId) {
+                block.parentId = parentId;
+            }
             if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                assignId(block.innerBlocks);
+                assignId(block.innerBlocks, block.id);
             }
         });
     };
@@ -435,11 +325,191 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
     return blocksCopy;
 });
 
+const getBlockById = (allBlocks, id) => {
+    let foundBlock = null;
+    const findBlock = (bs) => {
+        var _a;
+        for (let block of bs) {
+            if (block.id === id) {
+                foundBlock = block;
+                break;
+            }
+            else if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
+                findBlock(block.innerBlocks);
+            }
+        }
+    };
+    findBlock(allBlocks);
+    return foundBlock;
+};
+
 const getClasses = (block) => {
     var _a, _b;
     const parsed = parse(block.originalContent || '');
     return ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
 };
 
-export { BlockRenderer, BlockRendererContext, BlockRendererProvider, RootBlockRenderer, assignGatsbyImage, assignIds, getBackgroundStyle, getBorderRadiusStyle, getBorderStyle, getClasses, getMarginStyle, getMediaTextWidthStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue, useBlockRendererContext };
+const hasClass = (nd, className) => {
+    var _a, _b, _c;
+    return (!!((_a = nd.attribs) === null || _a === void 0 ? void 0 : _a.class) &&
+        ((_c = (_b = nd.attribs) === null || _b === void 0 ? void 0 : _b.class) === null || _c === void 0 ? void 0 : _c.split(' ').find((c) => c === className)));
+};
+
+const TerminalBlock = ({ block }) => {
+    const { allBlocks, customInternalLinkComponent, siteDomain } = useBlockRendererContext();
+    const getInternalHref = (href) => {
+        return href
+            .replace('http://', '')
+            .replace('https://', '')
+            .replace(siteDomain || '', '');
+    };
+    return (React.createElement(Fragment, null, convertHtmlToReact(block.originalContent || block.dynamicContent || '', {
+        transform: (node, index) => {
+            return convertNodeToReactElement(node, index, function transform(n, i) {
+                var _a, _b;
+                // process social link based on parent "core/social-links" block attributes
+                if (block.name === 'core/social-link') {
+                    // get parent
+                    if (block.parentId) {
+                        const parent = getBlockById(allBlocks, block.parentId);
+                        if (!n.attribs) {
+                            n.attribs = {};
+                        }
+                        if (n.name === 'a') {
+                            if ((_a = parent === null || parent === void 0 ? void 0 : parent.attributes) === null || _a === void 0 ? void 0 : _a.openInNewTab) {
+                                n.attribs.target = '_blank';
+                                n.attribs.rel = 'noopener nofollow';
+                                return convertNodeToReactElement(n, i, (n1, i1) => {
+                                    console.log('N1: ', n1);
+                                    if (!n1.attribs) {
+                                        n1.attribs = {};
+                                    }
+                                    if (hasClass(n1, 'wp-block-social-link-label')) {
+                                        n1.attribs.class = n1.attribs.class.replace('screen-reader-text', '');
+                                        return convertNodeToReactElement(n1, i1);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                // process if anchor tag and has customInternalLinkComponent
+                const href = ((_b = n.attribs) === null || _b === void 0 ? void 0 : _b.href) || '';
+                if (n.name === 'a' &&
+                    customInternalLinkComponent &&
+                    siteDomain &&
+                    (href.replace('http://', '').indexOf(siteDomain) === 0 ||
+                        href.replace('https://', '').indexOf(siteDomain) === 0)) {
+                    const reactElement = convertNodeToReactElement(n, i);
+                    return customInternalLinkComponent(Object.assign(Object.assign({}, (n.attribs || {})), { internalHref: getInternalHref(href), children: reactElement.props.children }), i);
+                }
+            });
+        },
+    })));
+};
+
+const BlockRenderer = ({ blocks = [] }) => {
+    const { renderComponent } = useBlockRendererContext();
+    const inlineStylesheets = blocks
+        .filter((block) => !!block.inlineStylesheet)
+        .map((block) => block.inlineStylesheet);
+    return (React.createElement(React.Fragment, null,
+        !!inlineStylesheets.length && (React.createElement(Helmet, null, inlineStylesheets.map((stylesheet, i) => (React.createElement("style", { key: i }, stylesheet))))),
+        blocks.map((block) => {
+            var _a, _b;
+            // render custom component for this block if exists
+            const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent(block);
+            if (component) {
+                return component;
+            }
+            const processNode = (shouldProcessNode) => {
+                var _a;
+                if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
+                    const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [] }));
+                    let isRootNode = false;
+                    return convertHtmlToReact$1(block.originalContent || '', {
+                        transform: (node, i) => {
+                            var _a, _b, _c, _d, _e, _f;
+                            if (!((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.class)) {
+                                if (!node.attribs) {
+                                    node.attribs = {};
+                                }
+                            }
+                            // process top level blocks that require is-layout-flex class
+                            if (i === 0 && !isRootNode) {
+                                isRootNode = true;
+                                if (block.name === 'core/buttons' ||
+                                    block.name === 'core/columns' ||
+                                    block.name === 'core/social-links' ||
+                                    block.name === 'core/gallery') {
+                                    node.attribs.class = `${node.attribs.class} is-layout-flex`;
+                                }
+                            }
+                            if ((_c = (_b = block.attributes) === null || _b === void 0 ? void 0 : _b.layout) === null || _c === void 0 ? void 0 : _c.type) {
+                                node.attribs.class = `${node.attribs.class} is-layout-${(_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type}`;
+                            }
+                            if (block.inlineClassnames) {
+                                node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                            }
+                            if (block.name === 'core/cover' &&
+                                block.attributes.useFeaturedImage) {
+                                node.attribs.style = `background-image:url(${block.attributes.url});`;
+                                if (!block.attributes.hasParallax) {
+                                    node.attribs.style = `${node.attribs.style}background-size: cover;`;
+                                }
+                            }
+                            if (block.name === 'core/social-link') {
+                                console.log('SOCIAL LINK: ', block);
+                            }
+                            // FIX when children have no data value,
+                            // it doesn't correctly "convertNodeToReactElement" / doesn't render
+                            if (!((_f = node.children) === null || _f === void 0 ? void 0 : _f.length)) {
+                                node.children = [
+                                    {
+                                        data: '\n',
+                                    },
+                                ];
+                            }
+                            if (shouldProcessNode(node)) {
+                                return convertNodeToReactElement(node, i, () => InnerBlocks);
+                            }
+                        },
+                    });
+                }
+                else {
+                    // if no innerBlocks
+                    return React.createElement(TerminalBlock, { key: block.id, block: block });
+                }
+            };
+            if (!block.originalContent &&
+                block.dynamicContent &&
+                !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
+                return processNode(() => true);
+            }
+            if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
+                return (React.createElement("div", { key: block.id },
+                    React.createElement(BlockRenderer, { blocks: block.innerBlocks })));
+            }
+            switch (block.name) {
+                case 'core/media-text': {
+                    return processNode((node) => hasClass(node, 'wp-block-media-text__content'));
+                }
+                case 'core/cover': {
+                    return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
+                }
+                default: {
+                    return processNode(() => true);
+                }
+            }
+        })));
+};
+const RootBlockRenderer = ({ blocks = [] }) => {
+    const { allBlocks } = useBlockRendererContext();
+    return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
+        React.createElement("main", { className: "is-layout-flow wp-block-group" },
+            React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
+                React.createElement(BlockRenderer, { blocks: allBlocks || blocks })))));
+};
+
+export { BlockRenderer, BlockRendererContext, BlockRendererProvider, RootBlockRenderer, assignGatsbyImage, assignIds, getBackgroundStyle, getBlockById, getBorderRadiusStyle, getBorderStyle, getClasses, getMarginStyle, getMediaTextWidthStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue, useBlockRendererContext };
 //# sourceMappingURL=index.js.map
