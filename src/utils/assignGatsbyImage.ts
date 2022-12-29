@@ -45,7 +45,7 @@ export const assignGatsbyImage = async ({
                   gatsbyImage(width: ${Math.min(
                     width,
                     1200
-                  )}, formats: WEBP, layout: CONSTRAINED)
+                  )}, breakpoints: [320, 750, 1080, 1366, 1920])
                 }
               }
             `);
