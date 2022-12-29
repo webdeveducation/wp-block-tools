@@ -269,7 +269,12 @@ const getBackgroundStyle = (attributes) => {
 const getMediaTextWidthStyle = (attributes) => {
     const mediaTextWidthStyles = {};
     if (attributes.mediaWidth !== null && attributes.mediaWidth !== 'undefined') {
-        mediaTextWidthStyles.gridTemplateColumns = `auto ${attributes.mediaWidth}%`;
+        if (attributes.mediaPosition === 'right') {
+            mediaTextWidthStyles.gridTemplateColumns = `auto ${attributes.mediaWidth}%`;
+        }
+        else {
+            mediaTextWidthStyles.gridTemplateColumns = `${attributes.mediaWidth}% auto`;
+        }
     }
     return mediaTextWidthStyles;
 };
