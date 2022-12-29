@@ -5,14 +5,10 @@ import convertHtmlToReact, {
 import { IBlockBase } from '../../types';
 import { Helmet } from 'react-helmet';
 import './style.scss';
+import { useBlockRendererContext } from '../../context';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
-  render?: (block: IBlockBase) => React.ReactElement | null;
-  customInternalLinkComponent?: {
-    render: (n: any, index: string | number) => React.ReactElement | null;
-    siteDomain: string;
-  };
 };
 
 const hasClass = (nd: any, className: string) => {
@@ -22,11 +18,10 @@ const hasClass = (nd: any, className: string) => {
   );
 };
 
-export const BlockRenderer = ({
-  blocks = [],
-  render,
-  customInternalLinkComponent,
-}: BlockRendererProps) => {
+export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
+  const { renderComponent, customInternalLinkComponent, siteDomain } =
+    useBlockRendererContext();
+
   const inlineStylesheets = blocks
     .filter((block) => !!block.inlineStylesheet)
     .map((block) => block.inlineStylesheet);
@@ -42,7 +37,7 @@ export const BlockRenderer = ({
       )}
       {blocks.map((block) => {
         // render custom component for this block if exists
-        const component = render?.(block);
+        const component = renderComponent?.(block);
         if (component) {
           return component;
         }
@@ -50,12 +45,7 @@ export const BlockRenderer = ({
         const processNode = (shouldProcessNode: any) => {
           if (block.innerBlocks?.length) {
             const InnerBlocks = (
-              <BlockRenderer
-                key={block.id}
-                blocks={block.innerBlocks || []}
-                render={render}
-                customInternalLinkComponent={customInternalLinkComponent}
-              />
+              <BlockRenderer key={block.id} blocks={block.innerBlocks || []} />
             );
             let topLevelFound = false;
             return convertHtmlToReact(block.originalContent || '', {
@@ -124,19 +114,26 @@ export const BlockRenderer = ({
                         // process if anchor tag and has customInternalLinkComponent
                         if (
                           n.name === 'a' &&
-                          customInternalLinkComponent?.render &&
-                          customInternalLinkComponent?.siteDomain &&
-                          n.attribs.href.indexOf(
-                            customInternalLinkComponent.siteDomain
-                          ) === 0
+                          customInternalLinkComponent &&
+                          siteDomain &&
+                          (n.attribs.href
+                            .replace('http://', '')
+                            .indexOf(siteDomain) === 0 ||
+                            n.attribs.href
+                              .replace('https://', '')
+                              .indexOf(siteDomain) === 0)
                         ) {
                           const reactElement: any = convertNodeToReactElement(
                             n,
                             i
                           );
-                          return customInternalLinkComponent.render(
+                          return customInternalLinkComponent(
                             {
                               ...(n.attribs || {}),
+                              internalHref: n.attribs.href
+                                .replace('http://', '')
+                                .replace('https://', '')
+                                .replace(siteDomain, ''),
                               children: reactElement.props.children,
                             },
                             i
@@ -162,7 +159,7 @@ export const BlockRenderer = ({
         if (!block.originalContent && block.innerBlocks?.length) {
           return (
             <div key={block.id}>
-              <BlockRenderer blocks={block.innerBlocks} render={render} />
+              <BlockRenderer blocks={block.innerBlocks} />
             </div>
           );
         }
@@ -187,20 +184,12 @@ export const BlockRenderer = ({
   );
 };
 
-export const RootBlockRenderer = ({
-  blocks = [],
-  render,
-  customInternalLinkComponent,
-}: BlockRendererProps) => {
+export const RootBlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
   return (
     <div className="wp-site-blocks" style={{ paddingTop: 0 }}>
       <main className="is-layout-flow wp-block-group">
         <div className="has-global-padding is-layout-constrained entry-content wp-block-post-content">
-          <BlockRenderer
-            blocks={blocks}
-            render={render}
-            customInternalLinkComponent={customInternalLinkComponent}
-          />
+          <BlockRenderer blocks={blocks} />
         </div>
       </main>
     </div>

@@ -1,15 +1,24 @@
-import React, { Fragment } from 'react';
+import React, { useContext, Fragment } from 'react';
 import convertHtmlToReact, { convertNodeToReactElement } from '@hedgedoc/html-to-react';
 import { Helmet } from 'react-helmet';
 import { v4 } from 'uuid';
+import { camelCase } from 'change-case';
 import parse from 'html-dom-parser';
+
+const BlockRendererContext = React.createContext({});
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, children, }) => (React.createElement(BlockRendererContext.Provider, { value: { renderComponent, customInternalLinkComponent, siteDomain } }, children));
+const useBlockRendererContext = () => {
+    const blockRendererContext = useContext(BlockRendererContext);
+    return blockRendererContext;
+};
 
 const hasClass = (nd, className) => {
     var _a, _b, _c;
     return (!!((_a = nd.attribs) === null || _a === void 0 ? void 0 : _a.class) &&
         ((_c = (_b = nd.attribs) === null || _b === void 0 ? void 0 : _b.class) === null || _c === void 0 ? void 0 : _c.split(' ').find((c) => c === className)));
 };
-const BlockRenderer = ({ blocks = [], render, customInternalLinkComponent, }) => {
+const BlockRenderer = ({ blocks = [] }) => {
+    const { renderComponent, customInternalLinkComponent, siteDomain } = useBlockRendererContext();
     const inlineStylesheets = blocks
         .filter((block) => !!block.inlineStylesheet)
         .map((block) => block.inlineStylesheet);
@@ -18,14 +27,14 @@ const BlockRenderer = ({ blocks = [], render, customInternalLinkComponent, }) =>
         blocks.map((block) => {
             var _a, _b;
             // render custom component for this block if exists
-            const component = render === null || render === void 0 ? void 0 : render(block);
+            const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent(block);
             if (component) {
                 return component;
             }
             const processNode = (shouldProcessNode) => {
                 var _a;
                 if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                    const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [], render: render, customInternalLinkComponent: customInternalLinkComponent }));
+                    const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [] }));
                     let topLevelFound = false;
                     return convertHtmlToReact(block.originalContent || '', {
                         transform: (node, i) => {
@@ -77,11 +86,19 @@ const BlockRenderer = ({ blocks = [], render, customInternalLinkComponent, }) =>
                         return convertNodeToReactElement(node, index, function transform(n, i) {
                             // process if anchor tag and has customInternalLinkComponent
                             if (n.name === 'a' &&
-                                (customInternalLinkComponent === null || customInternalLinkComponent === void 0 ? void 0 : customInternalLinkComponent.render) &&
-                                (customInternalLinkComponent === null || customInternalLinkComponent === void 0 ? void 0 : customInternalLinkComponent.siteDomain) &&
-                                n.attribs.href.indexOf(customInternalLinkComponent.siteDomain) === 0) {
+                                customInternalLinkComponent &&
+                                siteDomain &&
+                                (n.attribs.href
+                                    .replace('http://', '')
+                                    .indexOf(siteDomain) === 0 ||
+                                    n.attribs.href
+                                        .replace('https://', '')
+                                        .indexOf(siteDomain) === 0)) {
                                 const reactElement = convertNodeToReactElement(n, i);
-                                return customInternalLinkComponent.render(Object.assign(Object.assign({}, (n.attribs || {})), { children: reactElement.props.children }), i);
+                                return customInternalLinkComponent(Object.assign(Object.assign({}, (n.attribs || {})), { internalHref: n.attribs.href
+                                        .replace('http://', '')
+                                        .replace('https://', '')
+                                        .replace(siteDomain, ''), children: reactElement.props.children }), i);
                             }
                         });
                     },
@@ -94,7 +111,7 @@ const BlockRenderer = ({ blocks = [], render, customInternalLinkComponent, }) =>
             }
             if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
                 return (React.createElement("div", { key: block.id },
-                    React.createElement(BlockRenderer, { blocks: block.innerBlocks, render: render })));
+                    React.createElement(BlockRenderer, { blocks: block.innerBlocks })));
             }
             switch (block.name) {
                 case 'core/media-text': {
@@ -109,11 +126,11 @@ const BlockRenderer = ({ blocks = [], render, customInternalLinkComponent, }) =>
             }
         })));
 };
-const RootBlockRenderer = ({ blocks = [], render, customInternalLinkComponent, }) => {
+const RootBlockRenderer = ({ blocks = [] }) => {
     return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
         React.createElement("main", { className: "is-layout-flow wp-block-group" },
             React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
-                React.createElement(BlockRenderer, { blocks: blocks, render: render, customInternalLinkComponent: customInternalLinkComponent })))));
+                React.createElement(BlockRenderer, { blocks: blocks })))));
 };
 
 const assignIds = (blocks) => {
@@ -241,6 +258,14 @@ const getBackgroundStyle = (attributes) => {
     return backgroundStyle;
 };
 
+const getMediaTextWidthStyle = (attributes) => {
+    const mediaTextWidthStyles = {};
+    if (attributes.mediaWidth !== null && attributes.mediaWidth !== 'undefined') {
+        mediaTextWidthStyles.gridTemplateColumns = `auto ${attributes.mediaWidth}%`;
+    }
+    return mediaTextWidthStyles;
+};
+
 const getTextStyle = (attributes) => {
     var _a, _b;
     const textStyle = {};
@@ -283,8 +308,22 @@ const getTypographyStyle = (attributes) => {
     return typographyStyle;
 };
 
-const getStyles = (attributes) => {
-    return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes));
+const getStyles = (block) => {
+    var _a, _b;
+    const inlineStyles = {};
+    const parsed = parse(block.originalContent || '');
+    const styleString = ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.style) || '';
+    const individualStyles = styleString.split(';');
+    individualStyles.forEach((individualStyle) => {
+        const propertyAndValue = individualStyle.split(':');
+        if (propertyAndValue.length === 2) {
+            const property = propertyAndValue[0];
+            const value = propertyAndValue[1];
+            inlineStyles[camelCase(property)] = value;
+        }
+    });
+    const { attributes } = block;
+    return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, inlineStyles), getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes)), getMediaTextWidthStyle(attributes));
 };
 
 /******************************************************************************
@@ -397,5 +436,5 @@ const getClasses = (block) => {
     return ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
 };
 
-export { BlockRenderer, RootBlockRenderer, assignGatsbyImage, assignIds, getBackgroundStyle, getBorderRadiusStyle, getBorderStyle, getClasses, getMarginStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue };
+export { BlockRenderer, BlockRendererContext, BlockRendererProvider, RootBlockRenderer, assignGatsbyImage, assignIds, getBackgroundStyle, getBorderRadiusStyle, getBorderStyle, getClasses, getMarginStyle, getMediaTextWidthStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue, useBlockRendererContext };
 //# sourceMappingURL=index.js.map

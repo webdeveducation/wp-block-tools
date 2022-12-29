@@ -1,1 +1,2 @@
-export declare const getStyles: (attributes: any) => any;
+import { IBlockBase } from '../types';
+export declare const getStyles: (block: IBlockBase) => any;
