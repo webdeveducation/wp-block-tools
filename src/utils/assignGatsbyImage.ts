@@ -42,7 +42,10 @@ export const assignGatsbyImage = async ({
               query ImageQuery${id} {
                 ${getAlias(block.id)}: wpMediaItem(databaseId: { eq: ${id} }) {
                   databaseId
-                  gatsbyImage(width: ${Math.min(width, 1200)}, formats: WEBP)
+                  gatsbyImage(width: ${Math.min(
+                    width,
+                    1200
+                  )}, formats: WEBP, layout: CONSTRAINED)
                 }
               }
             `);
@@ -67,7 +70,7 @@ export const assignGatsbyImage = async ({
 
   images
     .filter((image) => {
-      const key = Object.keys(image.value.data)[0];
+      const key = Object.keys(image.value.data || {})[0];
       return !!image.value.data[key];
     })
     .forEach((image) => {

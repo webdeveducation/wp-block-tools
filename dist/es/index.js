@@ -339,7 +339,7 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
               query ImageQuery${id} {
                 ${getAlias(block.id)}: wpMediaItem(databaseId: { eq: ${id} }) {
                   databaseId
-                  gatsbyImage(width: ${Math.min(width, 1200)}, formats: WEBP)
+                  gatsbyImage(width: ${Math.min(width, 1200)}, formats: WEBP, layout: CONSTRAINED)
                 }
               }
             `);
@@ -360,7 +360,7 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
     const imagesMap = {};
     images
         .filter((image) => {
-        const key = Object.keys(image.value.data)[0];
+        const key = Object.keys(image.value.data || {})[0];
         return !!image.value.data[key];
     })
         .forEach((image) => {
