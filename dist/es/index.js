@@ -380,11 +380,13 @@ const TerminalBlock = ({ block }) => {
                                 n.attribs.target = '_blank';
                                 n.attribs.rel = 'noopener nofollow';
                                 return convertNodeToReactElement(n, i, (n1, i1) => {
+                                    var _a;
                                     console.log('N1: ', n1);
                                     if (!n1.attribs) {
                                         n1.attribs = {};
                                     }
-                                    if (hasClass(n1, 'wp-block-social-link-label')) {
+                                    if (((_a = parent === null || parent === void 0 ? void 0 : parent.attributes) === null || _a === void 0 ? void 0 : _a.showLabels) &&
+                                        hasClass(n1, 'wp-block-social-link-label')) {
                                         n1.attribs.class = n1.attribs.class.replace('screen-reader-text', '');
                                         return convertNodeToReactElement(n1, i1);
                                     }

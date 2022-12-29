@@ -44,7 +44,10 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
                           n1.attribs = {};
                         }
 
-                        if (hasClass(n1, 'wp-block-social-link-label')) {
+                        if (
+                          parent?.attributes?.showLabels &&
+                          hasClass(n1, 'wp-block-social-link-label')
+                        ) {
                           n1.attribs.class = n1.attribs.class.replace(
                             'screen-reader-text',
                             ''
