@@ -11,10 +11,13 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
     useBlockRendererContext();
 
   const getInternalHref = (href: string) => {
+    const siteDomainWithoutProtocol = siteDomain
+      ?.replace('http://', '')
+      .replace('https://', '');
     return href
       .replace('http://', '')
       .replace('https://', '')
-      .replace(siteDomain || '', '');
+      .replace(siteDomainWithoutProtocol || '', '');
   };
 
   return (

@@ -366,10 +366,11 @@ const hasClass = (nd, className) => {
 const TerminalBlock = ({ block }) => {
     const { allBlocks, customInternalLinkComponent, siteDomain } = useBlockRendererContext();
     const getInternalHref = (href) => {
+        const siteDomainWithoutProtocol = siteDomain === null || siteDomain === void 0 ? void 0 : siteDomain.replace('http://', '').replace('https://', '');
         return href
             .replace('http://', '')
             .replace('https://', '')
-            .replace(siteDomain || '', '');
+            .replace(siteDomainWithoutProtocol || '', '');
     };
     return (React__default["default"].createElement(React.Fragment, null, convertHtmlToReact.convertHtmlToReact(block.originalContent || block.dynamicContent || '', {
         transform: (node, index) => {
