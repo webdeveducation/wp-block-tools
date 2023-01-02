@@ -366,7 +366,9 @@ const hasClass = (nd, className) => {
 const TerminalBlock = ({ block }) => {
     const { allBlocks, customInternalLinkComponent, siteDomain } = useBlockRendererContext();
     const getInternalHref = (href) => {
-        const siteDomainWithoutProtocol = siteDomain === null || siteDomain === void 0 ? void 0 : siteDomain.replace('http://', '').replace('https://', '');
+        const siteDomainWithoutProtocol = (siteDomain || '')
+            .replace('http://', '')
+            .replace('https://', '');
         return href
             .replace('http://', '')
             .replace('https://', '')
@@ -406,11 +408,16 @@ const TerminalBlock = ({ block }) => {
                 }
                 // process if anchor tag and has customInternalLinkComponent
                 const href = ((_b = n.attribs) === null || _b === void 0 ? void 0 : _b.href) || '';
+                const hrefWithoutProtocol = href
+                    .replace('http://', '')
+                    .replace('https://', '');
+                const siteDomainWithoutProtocol = (siteDomain || '')
+                    .replace('http://', '')
+                    .replace('https://', '');
                 if (n.name === 'a' &&
                     customInternalLinkComponent &&
-                    siteDomain &&
-                    (href.replace('http://', '').indexOf(siteDomain) === 0 ||
-                        href.replace('https://', '').indexOf(siteDomain) === 0)) {
+                    siteDomainWithoutProtocol &&
+                    hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) {
                     const reactElement = convertHtmlToReact$1.convertNodeToReactElement(n, i);
                     return customInternalLinkComponent(Object.assign(Object.assign({}, (n.attribs || {})), { internalHref: getInternalHref(href), children: reactElement.props.children }), i);
                 }

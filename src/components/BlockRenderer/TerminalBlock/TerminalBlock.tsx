@@ -11,9 +11,10 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
     useBlockRendererContext();
 
   const getInternalHref = (href: string) => {
-    const siteDomainWithoutProtocol = siteDomain
-      ?.replace('http://', '')
+    const siteDomainWithoutProtocol = (siteDomain || '')
+      .replace('http://', '')
       .replace('https://', '');
+
     return href
       .replace('http://', '')
       .replace('https://', '')
@@ -65,12 +66,18 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
 
               // process if anchor tag and has customInternalLinkComponent
               const href = n.attribs?.href || '';
+              const hrefWithoutProtocol = href
+                .replace('http://', '')
+                .replace('https://', '');
+              const siteDomainWithoutProtocol = (siteDomain || '')
+                .replace('http://', '')
+                .replace('https://', '');
+
               if (
                 n.name === 'a' &&
                 customInternalLinkComponent &&
-                siteDomain &&
-                (href.replace('http://', '').indexOf(siteDomain) === 0 ||
-                  href.replace('https://', '').indexOf(siteDomain) === 0)
+                siteDomainWithoutProtocol &&
+                hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0
               ) {
                 const reactElement: any = convertNodeToReactElement(n, i);
                 return customInternalLinkComponent(
