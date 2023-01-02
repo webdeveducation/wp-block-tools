@@ -354,7 +354,14 @@ const getBlockById = (allBlocks, id) => {
 const getClasses = (block) => {
     var _a, _b;
     const parsed = parse__default["default"](block.originalContent || '');
-    return ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
+    let classNames = ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
+    if (block.attributes.align) {
+        const alignClass = `align${block.attributes.align}`;
+        if (!classNames.split(' ').find((c) => c === alignClass)) {
+            classNames = `${classNames} ${alignClass}`;
+        }
+    }
+    return classNames;
 };
 
 const hasClass = (nd, className) => {
