@@ -33,7 +33,7 @@ The first is the general styles for every core WordPress block. You can import t
 
 ```js
 // gatsby-browser.js
-import '~@webdeveducation/wp-block-tools/dist/css/style.css';
+import '@webdeveducation/wp-block-tools/dist/css/style.css';
 ```
 
 The second is the theme specific styles. We'll first need to query the stylesheet using the _WP GraphQL Theme Stylesheet_ plugin, then write that to a css file and reference that css file. This is best done in createPages in `gatsby-node.js` like so:
@@ -61,8 +61,8 @@ Then reference this new css file in `gatsby-browser.js` like so:
 
 ```js
 // gatsby-browser.js
-import '~@webdeveducation/wp-block-tools/dist/css/style.css';
 import './public/themeStylesheet.css';
+import '@webdeveducation/wp-block-tools/dist/css/style.css';
 ```
 
 ### Step 2 - Querying block data and assigning ID's
