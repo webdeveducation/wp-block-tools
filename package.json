@@ -6,7 +6,9 @@
   "keywords": [
     "wordpress",
     "headless",
-    "react"
+    "react",
+    "gatsby",
+    "next"
   ],
   "main": "dist/cjs/index.js",
   "module": "dist/es/index.js",
