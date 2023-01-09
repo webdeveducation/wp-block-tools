@@ -140,11 +140,17 @@ import { Link } from 'gatsby';
 
 const Page = ({ pageContext }) => {
   const customInternalLinkComponent = (
-    { internalHref, target, rel, children },
+    { internalHref, target, rel, className, children },
     index
   ) => {
     return (
-      <Link key={index} to={internalHref} target={target} rel={rel}>
+      <Link
+        key={index}
+        to={internalHref}
+        className={className}
+        target={target}
+        rel={rel}
+      >
         {children}
       </Link>
     );
@@ -435,11 +441,17 @@ import Link from 'next/link';
 const Page = (props) => {
   const bs = assignIds([...props.blocks]);
   const customInternalLinkComponent = (
-    { internalHref, target, rel, children },
+    { internalHref, target, rel, className, children },
     index
   ) => {
     return (
-      <Link key={index} href={internalHref} target={target} rel={rel}>
+      <Link
+        key={index}
+        href={internalHref}
+        className={className}
+        target={target}
+        rel={rel}
+      >
         {children}
       </Link>
     );
@@ -509,7 +521,7 @@ const Page = ({ pageContext }) => {
 ```
 
 > **Note**
-> The `getClasses` and `getStyles` helpers will return the associated WordPress classes and styles for this particular block type. For example if we set a rounded border for the image block in WordPress, then this will be returned by `getStyles` so we can apply this to our Gatsby Image. This makes our blocks render identical to the WordPress blocks.
+> The `getClasses` and `getStyles` helpers will return the associated WordPress classes and styles for this particular block type. For example if we set a rounded border for the image block in WordPress, then this will be returned by `getStyles` so we can apply this to our Next Image. This makes our blocks render identical to the WordPress blocks.
 
 #### Use Next Image for image components
 

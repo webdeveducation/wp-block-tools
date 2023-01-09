@@ -82,10 +82,6 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                   }
                 }
 
-                if (block.name === 'core/social-link') {
-                  console.log('SOCIAL LINK: ', block);
-                }
-
                 // FIX when children have no data value,
                 // it doesn't correctly "convertNodeToReactElement" / doesn't render
                 if (!node.children?.length) {

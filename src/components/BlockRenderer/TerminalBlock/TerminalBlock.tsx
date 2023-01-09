@@ -80,9 +80,11 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
                 hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0
               ) {
                 const reactElement: any = convertNodeToReactElement(n, i);
+                const { class: className, ...attribs } = n;
                 return customInternalLinkComponent(
                   {
-                    ...(n.attribs || {}),
+                    ...(attribs || {}),
+                    className,
                     internalHref: getInternalHref(href),
                     children: reactElement.props.children,
                   },
