@@ -2,7 +2,8 @@ import { v4 as uuid } from 'uuid';
 import { IBlockBase } from '../types';
 
 export const assignIds = (blocks: IBlockBase[]) => {
-  const blocksCopy = [...blocks];
+  const blocksCopy = JSON.parse(JSON.stringify(blocks));
+
   const assignId = (b: IBlockBase[], parentId?: string) => {
     b.forEach((block: IBlockBase) => {
       block.id = uuid();

@@ -66,7 +66,7 @@ function __awaiter(thisArg, _arguments, P, generator) {
 }
 
 const assignIds = (blocks) => {
-    const blocksCopy = [...blocks];
+    const blocksCopy = JSON.parse(JSON.stringify(blocks));
     const assignId = (b, parentId) => {
         b.forEach((block) => {
             var _a;
