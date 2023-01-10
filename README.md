@@ -418,7 +418,7 @@ Then we can finally render our blocks with the `BlockRendererProvider` component
 // pages/[[...slug]].js
 import { BlockRendererProvider } from '@webdeveducation/wp-block-tools';
 
-const Page = (props) => {
+const Page = ({ blocks }) => {
   return <BlockRendererProvider allBlocks={blocks} />;
 };
 
@@ -435,8 +435,7 @@ For this we can use the `siteDomain` (the `siteDomain` refers to the domain / su
 // pages/[[...slug]].js
 import Link from 'next/link';
 
-const Page = (props) => {
-  const bs = assignIds([...props.blocks]);
+const Page = ({ blocks }) => {
   const customInternalLinkComponent = (
     { internalHref, target, rel, className, children },
     index
@@ -456,7 +455,7 @@ const Page = (props) => {
   return (
     <div>
       <BlockRendererProvider
-        allBlocks={bs}
+        allBlocks={blocks}
         siteDomain="wp.mydomain.com"
         customInternalLinkComponent={customInternalLinkComponent}
       />
@@ -488,7 +487,7 @@ import {
   BlockRenderer,
 } from '@webdeveducation/wp-block-tools';
 
-const Page = ({ pageContext }) => {
+const Page = ({ blocks }) => {
   const blockRendererComponents = (block) => {
     switch (block.name) {
       case 'core/column': {
@@ -511,7 +510,7 @@ const Page = ({ pageContext }) => {
     <BlockRendererProvider
       renderComponent={blockRendererComponents}
       siteDomain="wp.mydomain.com"
-      allBlocks={pageContext.blocks}
+      allBlocks={blocks}
     />
   );
 };
