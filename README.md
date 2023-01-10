@@ -374,11 +374,13 @@ Then reference this new css file in `styles/globals.css` like so:
 
 ### Step 2 - Querying block data and assigning ID's
 
-The _WP GraphQL Blocks_ plugin exposes a new field we can query called `blocks` for every post or page.
+The _WP GraphQL Blocks_ plugin exposes a new field we can query called `blocks` for every post or page. WordPress doesn't assign ID's to blocks so we also need to generate these ourselves with the `assignIds` helper function.
 For example we can query the blocks when we `getStaticProps` like so:
 
 ```js
 // pages/[[...slug]].js
+import { assignIds } from '@webdeveducation/wp-block-tools';
+
 export const getStaticProps = async (context) => {
   const uri = context.params?.slug ? `/${context.params.slug.join('/')}/` : '/';
 
@@ -402,26 +404,21 @@ export const getStaticProps = async (context) => {
 
   return {
     props: {
-      blocks: data.nodeByUri.blocks || [],
+      blocks: assignIds(data.nodeByUri.blocks || []),
     },
   };
 };
 ```
 
-### Step 3 - Assign ID's and render blocks
+### Step 3 - Render blocks
 
-WordPress doesn't assign ID's to blocks so we also need to generate these ourselves with the `assignIds` helper function.
 Then we can finally render our blocks with the `BlockRendererProvider` component like so:
 
 ```js
 // pages/[[...slug]].js
-import {
-  BlockRendererProvider,
-  assignIds,
-} from '@webdeveducation/wp-block-tools';
+import { BlockRendererProvider } from '@webdeveducation/wp-block-tools';
 
 const Page = (props) => {
-  const blocks = assignIds(props.blocks);
   return <BlockRendererProvider allBlocks={blocks} />;
 };
 
