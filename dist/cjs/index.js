@@ -436,7 +436,8 @@ const TerminalBlock = ({ block }) => {
                 if (n.name === 'a' &&
                     customInternalLinkComponent &&
                     siteDomainWithoutProtocol &&
-                    hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) {
+                    (hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0 ||
+                        hrefWithoutProtocol.indexOf('/') === 0)) {
                     const reactElement = convertHtmlToReact$1.convertNodeToReactElement(n, i);
                     const { class: className } = n, attribs = __rest(n, ["class"]);
                     return customInternalLinkComponent(Object.assign(Object.assign({}, (attribs || {})), { className, internalHref: getInternalHref(href), children: reactElement.props.children }), i);
