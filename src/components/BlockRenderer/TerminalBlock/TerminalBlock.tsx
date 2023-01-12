@@ -76,7 +76,6 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
               if (
                 n.name === 'a' &&
                 customInternalLinkComponent &&
-                siteDomainWithoutProtocol &&
                 (hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0 ||
                   hrefWithoutProtocol.indexOf('/') === 0)
               ) {
