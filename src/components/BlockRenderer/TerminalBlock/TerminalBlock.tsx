@@ -83,7 +83,7 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
               ) {
                 const reactElement: any = convertNodeToReactElement(n, i);
                 const { class: className, ...attribs } = n;
-                return customInternalLinkComponent(
+                const internalLinkComponent = customInternalLinkComponent(
                   {
                     ...(attribs || {}),
                     className,
@@ -92,6 +92,9 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
                   },
                   i
                 );
+                if (!!internalLinkComponent) {
+                  return internalLinkComponent;
+                }
               }
             }
           );

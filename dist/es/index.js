@@ -433,7 +433,10 @@ const TerminalBlock = ({ block }) => {
                         hrefWithoutProtocol.indexOf('/') === 0)) {
                     const reactElement = convertNodeToReactElement(n, i);
                     const { class: className } = n, attribs = __rest(n, ["class"]);
-                    return customInternalLinkComponent(Object.assign(Object.assign({}, (attribs || {})), { className, internalHref: getInternalHref(href), children: reactElement.props.children }), i);
+                    const internalLinkComponent = customInternalLinkComponent(Object.assign(Object.assign({}, (attribs || {})), { className, internalHref: getInternalHref(href), children: reactElement.props.children }), i);
+                    if (!!internalLinkComponent) {
+                        return internalLinkComponent;
+                    }
                 }
             });
         },
