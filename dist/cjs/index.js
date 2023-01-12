@@ -435,7 +435,6 @@ const TerminalBlock = ({ block }) => {
                     .replace('https://', '');
                 if (n.name === 'a' &&
                     customInternalLinkComponent &&
-                    siteDomainWithoutProtocol &&
                     (hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0 ||
                         hrefWithoutProtocol.indexOf('/') === 0)) {
                     const reactElement = convertHtmlToReact$1.convertNodeToReactElement(n, i);
