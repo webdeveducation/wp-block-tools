@@ -427,7 +427,9 @@ const TerminalBlock = ({ block }) => {
                     .replace('https://', '');
                 if (n.name === 'a' &&
                     customInternalLinkComponent &&
-                    (hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0 ||
+                    ((!!siteDomainWithoutProtocol &&
+                        hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) ===
+                            0) ||
                         hrefWithoutProtocol.indexOf('/') === 0)) {
                     const reactElement = convertNodeToReactElement(n, i);
                     const { class: className } = n, attribs = __rest(n, ["class"]);

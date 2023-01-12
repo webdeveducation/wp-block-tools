@@ -76,7 +76,9 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
               if (
                 n.name === 'a' &&
                 customInternalLinkComponent &&
-                (hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0 ||
+                ((!!siteDomainWithoutProtocol &&
+                  hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) ===
+                    0) ||
                   hrefWithoutProtocol.indexOf('/') === 0)
               ) {
                 const reactElement: any = convertNodeToReactElement(n, i);
