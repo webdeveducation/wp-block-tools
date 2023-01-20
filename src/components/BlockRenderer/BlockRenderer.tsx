@@ -111,11 +111,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
         }
 
         if (!block.originalContent && block.innerBlocks?.length) {
-          return (
-            <div key={block.id}>
-              <BlockRenderer blocks={block.innerBlocks} />
-            </div>
-          );
+          return <BlockRenderer key={block.id} blocks={block.innerBlocks} />;
         }
 
         switch (block.name) {
@@ -130,7 +126,9 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
             );
           }
           default: {
-            return processNode(() => true);
+            return processNode((node: any) => {
+              return true;
+            });
           }
         }
       })}

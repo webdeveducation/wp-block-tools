@@ -519,8 +519,7 @@ const BlockRenderer = ({ blocks = [] }) => {
                 return processNode(() => true);
             }
             if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
-                return (React.createElement("div", { key: block.id },
-                    React.createElement(BlockRenderer, { blocks: block.innerBlocks })));
+                return React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks });
             }
             switch (block.name) {
                 case 'core/media-text': {
@@ -530,7 +529,9 @@ const BlockRenderer = ({ blocks = [] }) => {
                     return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
                 }
                 default: {
-                    return processNode(() => true);
+                    return processNode((node) => {
+                        return true;
+                    });
                 }
             }
         })));

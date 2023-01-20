@@ -527,8 +527,7 @@ const BlockRenderer = ({ blocks = [] }) => {
                 return processNode(() => true);
             }
             if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
-                return (React__default["default"].createElement("div", { key: block.id },
-                    React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks })));
+                return React__default["default"].createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks });
             }
             switch (block.name) {
                 case 'core/media-text': {
@@ -538,7 +537,9 @@ const BlockRenderer = ({ blocks = [] }) => {
                     return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
                 }
                 default: {
-                    return processNode(() => true);
+                    return processNode((node) => {
+                        return true;
+                    });
                 }
             }
         })));
