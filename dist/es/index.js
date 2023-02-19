@@ -356,16 +356,28 @@ const getBlockById = (allBlocks, id) => {
 };
 
 const getClasses = (block) => {
-    var _a, _b;
-    const parsed = parse(block.originalContent || '');
-    let classNames = ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
+    var _a, _b, _c, _d;
+    const originalContentParsed = parse(block.originalContent || '');
+    const dynamicContentParsed = parse(block.dynamicContent || '');
+    let originalContentClassNames = ((_b = (_a = originalContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
+    let dynamicContentClassNames = ((_d = (_c = dynamicContentParsed[0]) === null || _c === void 0 ? void 0 : _c.attribs) === null || _d === void 0 ? void 0 : _d.class) || '';
+    let classNames = `${originalContentClassNames} ${dynamicContentClassNames}`;
     if (block.attributes.align) {
         const alignClass = `align${block.attributes.align}`;
         if (!classNames.split(' ').find((c) => c === alignClass)) {
             classNames = `${classNames} ${alignClass}`;
         }
     }
-    return classNames;
+    // remove duplicates in classNames
+    const classNamesUnique = [];
+    const classNamesSplit = classNames.split(' ').filter((c) => !!c);
+    classNamesSplit.forEach((className) => {
+        if (!classNamesUnique.find((c) => c === className)) {
+            classNamesUnique.push(className);
+        }
+    });
+    console.log('DYNAMIC CLASS NAMES: ', dynamicContentClassNames);
+    return classNamesUnique.join(' ');
 };
 
 const hasClass = (nd, className) => {
