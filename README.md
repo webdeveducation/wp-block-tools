@@ -19,7 +19,6 @@ You'll also need the following plugins installed in your WordPress site:
 
 - [WP GraphQL](https://wordpress.org/plugins/wp-graphql/)
 - [WP GraphQL Blocks](https://github.com/webdeveducation/wp-graphql-blocks/releases)
-  > **Note** Because WP GraphQL Blocks is based on [WP GraphQL Gutenberg](https://github.com/pristas-peter/wp-graphql-gutenberg), please only have the WP GraphQL Blocks plugin activated, otherwise there will likely be conflicts between the two plugins resulting in unexpected behavior.
 - [WP GraphQL Theme Stylesheet](https://github.com/webdeveducation/wp-graphql-theme-stylesheet/releases)
 - [WP Gatsby](https://wordpress.org/plugins/wp-gatsby/) (Required when working with Gatsby but not needed when working with Next JS)
 
