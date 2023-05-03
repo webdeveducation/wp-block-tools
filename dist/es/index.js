@@ -9,11 +9,12 @@ import parse from 'html-dom-parser';
 const BlockRendererContext = React.createContext({
     allBlocks: [],
 });
-const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, allBlocks, children, }) => (React.createElement(BlockRendererContext.Provider, { value: {
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, allBlocks, children, includeTemplate, }) => (React.createElement(BlockRendererContext.Provider, { value: {
         renderComponent,
         customInternalLinkComponent,
         siteDomain,
         allBlocks,
+        includeTemplate,
     } }, children ? children : React.createElement(RootBlockRenderer, null)));
 const useBlockRendererContext = () => {
     const blockRendererContext = useContext(BlockRendererContext);
@@ -474,9 +475,9 @@ const BlockRenderer = ({ blocks = [] }) => {
                 if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
                     const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [] }));
                     let isRootNode = false;
-                    return convertHtmlToReact$1(block.originalContent || '', {
+                    return convertHtmlToReact$1(block.originalContent || block.dynamicContent || '', {
                         transform: (node, i) => {
-                            var _a, _b, _c, _d, _e, _f;
+                            var _a, _b, _c, _d, _e;
                             if (!((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.class)) {
                                 if (!node.attribs) {
                                     node.attribs = {};
@@ -505,15 +506,17 @@ const BlockRenderer = ({ blocks = [] }) => {
                                     node.attribs.style = `${node.attribs.style}background-size: cover;`;
                                 }
                             }
+                            // get classes from both dynamicContent and originalContent
+                            node.attribs.class = `${node.attribs.class} ${getClasses(block)}`;
                             // FIX when children have no data value,
                             // it doesn't correctly "convertNodeToReactElement" / doesn't render
-                            if (!((_f = node.children) === null || _f === void 0 ? void 0 : _f.length)) {
-                                node.children = [
-                                    {
-                                        data: '\n',
-                                    },
-                                ];
-                            }
+                            //if (!node.children?.length) {
+                            node.children = [
+                                {
+                                    data: '\n',
+                                },
+                            ];
+                            //}
                             if (shouldProcessNode(node)) {
                                 return convertNodeToReactElement(node, i, () => InnerBlocks);
                             }
@@ -525,10 +528,18 @@ const BlockRenderer = ({ blocks = [] }) => {
                     return React.createElement(TerminalBlock, { key: block.id, block: block });
                 }
             };
+            // only process a block that has dynamicContent with no originalContent
+            // only if there's no children (i.e. this block contains no innerBlocks to process)
+            // therefore it's safe to process the dynamic content (it's a terminal block)
             if (!block.originalContent &&
                 block.dynamicContent &&
                 !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
                 return processNode(() => true);
+            }
+            // if it's post content, then process node with class wp-block-post-content
+            // i.e. it will process from dynamicContent but only process top level element
+            if (block.name === 'core/post-content') {
+                return processNode((node) => hasClass(node, 'wp-block-post-content'));
             }
             if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
                 return React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks });
@@ -549,8 +560,9 @@ const BlockRenderer = ({ blocks = [] }) => {
         })));
 };
 const RootBlockRenderer = ({ blocks = [] }) => {
-    const { allBlocks } = useBlockRendererContext();
-    return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
+    const { allBlocks, includeTemplate } = useBlockRendererContext();
+    return includeTemplate ? (React.createElement("div", { className: "wp-site-blocks" },
+        React.createElement(BlockRenderer, { blocks: allBlocks || blocks }))) : (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
         React.createElement("main", { className: "is-layout-flow wp-block-group" },
             React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
                 React.createElement(BlockRenderer, { blocks: allBlocks || blocks })))));

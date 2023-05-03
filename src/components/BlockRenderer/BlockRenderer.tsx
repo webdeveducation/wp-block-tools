@@ -8,6 +8,7 @@ import { useBlockRendererContext } from '../../context';
 import { TerminalBlock } from './TerminalBlock';
 import './style.scss';
 import { hasClass } from '../../utils/hasClass';
+import { getClasses } from '../../utils';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
@@ -42,72 +43,95 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
               <BlockRenderer key={block.id} blocks={block.innerBlocks || []} />
             );
             let isRootNode = false;
-            return convertHtmlToReact(block.originalContent || '', {
-              transform: (node: any, i) => {
-                if (!node.attribs?.class) {
-                  if (!node.attribs) {
-                    node.attribs = {};
+            return convertHtmlToReact(
+              block.originalContent || block.dynamicContent || '',
+              {
+                transform: (node: any, i) => {
+                  if (!node.attribs?.class) {
+                    if (!node.attribs) {
+                      node.attribs = {};
+                    }
                   }
-                }
 
-                // process top level blocks that require is-layout-flex class
-                if (i === 0 && !isRootNode) {
-                  isRootNode = true;
+                  // process top level blocks that require is-layout-flex class
+                  if (i === 0 && !isRootNode) {
+                    isRootNode = true;
+
+                    if (
+                      block.name === 'core/buttons' ||
+                      block.name === 'core/columns' ||
+                      block.name === 'core/social-links' ||
+                      block.name === 'core/gallery'
+                    ) {
+                      node.attribs.class = `${node.attribs.class} is-layout-flex`;
+                    }
+                  }
+
+                  if (block.attributes?.layout?.type) {
+                    node.attribs.class = `${node.attribs.class} is-layout-${block.attributes?.layout?.type}`;
+                  }
+
+                  if (block.inlineClassnames) {
+                    node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
+                  }
 
                   if (
-                    block.name === 'core/buttons' ||
-                    block.name === 'core/columns' ||
-                    block.name === 'core/social-links' ||
-                    block.name === 'core/gallery'
+                    block.name === 'core/cover' &&
+                    block.attributes.useFeaturedImage
                   ) {
-                    node.attribs.class = `${node.attribs.class} is-layout-flex`;
+                    node.attribs.style = `background-image:url(${block.attributes.url});`;
+                    if (!block.attributes.hasParallax) {
+                      node.attribs.style = `${node.attribs.style}background-size: cover;`;
+                    }
                   }
-                }
 
-                if (block.attributes?.layout?.type) {
-                  node.attribs.class = `${node.attribs.class} is-layout-${block.attributes?.layout?.type}`;
-                }
+                  // get classes from both dynamicContent and originalContent
+                  node.attribs.class = `${node.attribs.class} ${getClasses(
+                    block
+                  )}`;
 
-                if (block.inlineClassnames) {
-                  node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
-                }
-
-                if (
-                  block.name === 'core/cover' &&
-                  block.attributes.useFeaturedImage
-                ) {
-                  node.attribs.style = `background-image:url(${block.attributes.url});`;
-                  if (!block.attributes.hasParallax) {
-                    node.attribs.style = `${node.attribs.style}background-size: cover;`;
-                  }
-                }
-
-                // FIX when children have no data value,
-                // it doesn't correctly "convertNodeToReactElement" / doesn't render
-                if (!node.children?.length) {
+                  // FIX when children have no data value,
+                  // it doesn't correctly "convertNodeToReactElement" / doesn't render
+                  //if (!node.children?.length) {
                   node.children = [
                     {
                       data: '\n',
                     },
                   ];
-                }
-                if (shouldProcessNode(node)) {
-                  return convertNodeToReactElement(node, i, () => InnerBlocks);
-                }
-              },
-            });
+                  //}
+                  if (shouldProcessNode(node)) {
+                    return convertNodeToReactElement(
+                      node,
+                      i,
+                      () => InnerBlocks
+                    );
+                  }
+                },
+              }
+            );
           } else {
             // if no innerBlocks
             return <TerminalBlock key={block.id} block={block} />;
           }
         };
 
+        // only process a block that has dynamicContent with no originalContent
+        // only if there's no children (i.e. this block contains no innerBlocks to process)
+        // therefore it's safe to process the dynamic content (it's a terminal block)
         if (
           !block.originalContent &&
           block.dynamicContent &&
           !block.innerBlocks?.length
         ) {
           return processNode(() => true);
+        }
+
+        // if it's post content, then process node with class wp-block-post-content
+        // i.e. it will process from dynamicContent but only process top level element
+        if (block.name === 'core/post-content') {
+          return processNode((node: any) =>
+            hasClass(node, 'wp-block-post-content')
+          );
         }
 
         if (!block.originalContent && block.innerBlocks?.length) {
@@ -137,8 +161,12 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
 };
 
 export const RootBlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
-  const { allBlocks } = useBlockRendererContext();
-  return (
+  const { allBlocks, includeTemplate } = useBlockRendererContext();
+  return includeTemplate ? (
+    <div className="wp-site-blocks">
+      <BlockRenderer blocks={allBlocks || blocks} />
+    </div>
+  ) : (
     <div className="wp-site-blocks" style={{ paddingTop: 0 }}>
       <main className="is-layout-flow wp-block-group">
         <div className="has-global-padding is-layout-constrained entry-content wp-block-post-content">

@@ -10,6 +10,7 @@ export type IBlockRendererContext = {
     index: string | number
   ) => React.ReactElement | null;
   siteDomain?: string;
+  includeTemplate?: boolean;
 };
 
 export const BlockRendererContext = React.createContext<IBlockRendererContext>({
@@ -21,6 +22,7 @@ export const BlockRendererProvider = ({
   siteDomain,
   allBlocks,
   children,
+  includeTemplate,
 }: IBlockRendererContext & { children?: JSX.Element }) => (
   <BlockRendererContext.Provider
     value={{
@@ -28,6 +30,7 @@ export const BlockRendererProvider = ({
       customInternalLinkComponent,
       siteDomain,
       allBlocks,
+      includeTemplate,
     }}
   >
     {children ? children : <RootBlockRenderer />}
