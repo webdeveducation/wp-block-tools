@@ -6,7 +6,9 @@ export function convertStyleStringToReact(styleString: string) {
 
   declarations.forEach((declaration) => {
     // Split each style declaration into property and value
-    const [property, value] = declaration.split(':');
+    // (cater for the style value having : for example background: url(http://test.com/img.jpg)))
+    const property = declaration.substring(0, declaration.indexOf(':'));
+    const value = declaration.substring(declaration.indexOf(':') + 1);
 
     if (property && value) {
       // Remove leading/trailing whitespaces from property and value
