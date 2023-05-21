@@ -1,14 +1,23 @@
-import { convertNodeToReactElement } from '@hedgedoc/html-to-react';
-import { convertHtmlToReact } from '@hedgedoc/html-to-react/dist/convertHtmlToReact';
 import React, { Fragment } from 'react';
 import { useBlockRendererContext } from '../../../context';
 import { IBlockBase } from '../../../types';
-import { getBlockById } from '../../../utils';
+import parse from 'html-dom-parser';
+import { createReactNodes } from '../../../utils/createReactNodes';
+import {
+  convertStyleStringToReact,
+  getBlockById,
+  getLinkTextStyle,
+} from '../../../utils';
 import { hasClass } from '../../../utils/hasClass';
 
 export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
-  const { allBlocks, customInternalLinkComponent, siteDomain } =
-    useBlockRendererContext();
+  const {
+    blocks: allBlocks,
+    customInternalLinkComponent,
+    siteDomain,
+  } = useBlockRendererContext();
+
+  const parsedHTML: any[] = parse(block.htmlContent || '') || [];
 
   const getInternalHref = (href: string) => {
     const siteDomainWithoutProtocol = (siteDomain || '')
@@ -21,85 +30,88 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
       .replace(siteDomainWithoutProtocol || '', '');
   };
 
-  return (
-    <Fragment>
-      {convertHtmlToReact(block.originalContent || block.dynamicContent || '', {
-        transform: (node: any, index) => {
-          return convertNodeToReactElement(
-            node,
-            index,
-            function transform(n: any, i) {
-              // process social link based on parent "core/social-links" block attributes
-              if (block.name === 'core/social-link') {
-                // get parent
-                if (block.parentId) {
-                  const parent = getBlockById(allBlocks, block.parentId);
-                  if (!n.attribs) {
-                    n.attribs = {};
-                  }
+  const traverse = (els: any[]) => {
+    els.forEach((el) => {
+      // process social link based on parent "core/social-links" block attributes
+      if (block.name === 'core/social-link') {
+        // get parent
+        if (block.parentId) {
+          const parentBlock = getBlockById(allBlocks, block.parentId);
+          if (!el.attribs) {
+            el.attribs = {};
+          }
 
-                  if (n.name === 'a') {
-                    if (parent?.attributes?.openInNewTab) {
-                      n.attribs.target = '_blank';
-                      n.attribs.rel = 'noopener nofollow';
-                      return convertNodeToReactElement(n, i, (n1: any, i1) => {
-                        console.log('N1: ', n1);
-                        if (!n1.attribs) {
-                          n1.attribs = {};
-                        }
-
-                        if (
-                          parent?.attributes?.showLabels &&
-                          hasClass(n1, 'wp-block-social-link-label')
-                        ) {
-                          n1.attribs.class = n1.attribs.class.replace(
-                            'screen-reader-text',
-                            ''
-                          );
-                          return convertNodeToReactElement(n1, i1);
-                        }
-                      });
-                    }
-                  }
-                }
-              }
-
-              // process if anchor tag and has customInternalLinkComponent
-              const href = n.attribs?.href || '';
-              const hrefWithoutProtocol = href
-                .replace('http://', '')
-                .replace('https://', '');
-              const siteDomainWithoutProtocol = (siteDomain || '')
-                .replace('http://', '')
-                .replace('https://', '');
-
-              if (
-                n.name === 'a' &&
-                customInternalLinkComponent &&
-                ((!!siteDomainWithoutProtocol &&
-                  hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) ===
-                    0) ||
-                  hrefWithoutProtocol.indexOf('/') === 0)
-              ) {
-                const reactElement: any = convertNodeToReactElement(n, i);
-                const { class: className, ...attribs } = n;
-                const internalLinkComponent = customInternalLinkComponent(
-                  {
-                    ...(attribs || {}),
-                    className,
-                    internalHref: getInternalHref(href),
-                    children: reactElement.props.children,
-                  },
-                  i
-                );
-                if (!!internalLinkComponent) {
-                  return internalLinkComponent;
-                }
-              }
+          if (el.name === 'a') {
+            if (parentBlock?.attributes?.openInNewTab) {
+              el.attribs.target = '_blank';
+              el.attribs.rel = 'noopener nofollow';
             }
-          );
-        },
-      })}
-    </Fragment>
-  );
+          }
+          if (
+            parentBlock?.attributes?.showLabels &&
+            hasClass(el, 'wp-block-social-link-label')
+          ) {
+            el.attribs.class = el.attribs.class.replace(
+              'screen-reader-text',
+              ''
+            );
+          }
+        }
+      }
+
+      if (el.type === 'tag' && el.name === 'a') {
+        // if anchor tag, check to see if it's being rendered within a paragraph block
+        if (block.name === 'core/paragraph') {
+          // get the link styles
+          const linkStyles = getLinkTextStyle(block.attributes);
+          if (!el.attribs) {
+            el.attribs = {};
+          }
+          el.attribs.style = `color: ${linkStyles.color};${
+            el.attribs.style || ''
+          }`;
+        }
+
+        // process if anchor tag and has customInternalLinkComponent
+        const href = el.attribs?.href || '';
+        const hrefWithoutProtocol = href
+          .replace('http://', '')
+          .replace('https://', '');
+        const siteDomainWithoutProtocol = (siteDomain || '')
+          .replace('http://', '')
+          .replace('https://', '');
+
+        if (
+          customInternalLinkComponent &&
+          ((!!siteDomainWithoutProtocol &&
+            hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
+            hrefWithoutProtocol.indexOf('/') === 0)
+        ) {
+          const reactElement: any = createReactNodes([el]);
+
+          const style = el.attribs?.style
+            ? convertStyleStringToReact(el.attribs?.style)
+            : null;
+
+          const internalLinkComponent = customInternalLinkComponent({
+            ...(el?.attribs || {}),
+            style,
+            internalHref: getInternalHref(href),
+            children: reactElement,
+          });
+          if (!!internalLinkComponent) {
+            el.type = 'react';
+            el.component = internalLinkComponent;
+          }
+        }
+      }
+      if (el.children) {
+        traverse(el.children);
+      }
+    });
+  };
+
+  traverse(parsedHTML);
+
+  return <Fragment>{createReactNodes(parsedHTML)}</Fragment>;
 };

@@ -12,7 +12,7 @@ import { getTypographyStyle } from './getTypographyStyle';
 
 export const getStyles = (block: IBlockBase) => {
   const inlineStyles: { [key: string]: string } = {};
-  const parsed: any = parse(block.originalContent || '');
+  const parsed: any = parse(block.htmlContent || '');
   const styleString = parsed[0]?.attribs?.style || '';
   const individualStyles: string[] = styleString.split(';');
   individualStyles.forEach((individualStyle) => {

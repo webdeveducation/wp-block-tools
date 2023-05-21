@@ -1,38 +1,39 @@
 import React, { useContext } from 'react';
 import { RootBlockRenderer } from '../components';
 import { IBlockBase } from '../types';
+import { assignIds } from '../utils';
 
 export type IBlockRendererContext = {
-  allBlocks: IBlockBase[];
+  blocks: IBlockBase[];
   renderComponent?: (block: IBlockBase) => React.ReactElement | null;
-  customInternalLinkComponent?: (
-    n: any,
-    index: string | number
-  ) => React.ReactElement | null;
+  customInternalLinkComponent?: (el: any) => React.ReactElement | null;
   siteDomain?: string;
 };
 
 export const BlockRendererContext = React.createContext<IBlockRendererContext>({
-  allBlocks: [],
+  blocks: [],
 });
 export const BlockRendererProvider = ({
   renderComponent,
   customInternalLinkComponent,
   siteDomain,
-  allBlocks,
+  blocks,
   children,
-}: IBlockRendererContext & { children?: JSX.Element }) => (
-  <BlockRendererContext.Provider
-    value={{
-      renderComponent,
-      customInternalLinkComponent,
-      siteDomain,
-      allBlocks,
-    }}
-  >
-    {children ? children : <RootBlockRenderer />}
-  </BlockRendererContext.Provider>
-);
+}: IBlockRendererContext & { children?: JSX.Element }) => {
+  const blocksWithIds = assignIds(blocks);
+  return (
+    <BlockRendererContext.Provider
+      value={{
+        renderComponent,
+        customInternalLinkComponent,
+        siteDomain,
+        blocks: blocksWithIds,
+      }}
+    >
+      {children ? children : <RootBlockRenderer />}
+    </BlockRendererContext.Provider>
+  );
+};
 export const useBlockRendererContext = () => {
   const blockRendererContext = useContext(BlockRendererContext);
   return blockRendererContext;

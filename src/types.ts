@@ -3,10 +3,22 @@ export interface IBlockBase {
   parentId?: string;
   name: string;
   attributes: { [key: string]: any };
-  originalContent?: string;
-  dynamicContent?: string;
+  htmlContent?: string;
   innerBlocks?: IBlockBase[];
   inlineStylesheet?: string;
   inlineClassnames?: string;
   [key: string]: any;
+}
+
+export interface IParsedHTML {
+  tag?: string;
+  nodeType: NodeType;
+  content?: string;
+  attributes?: { [key: string]: string };
+  children?: IParsedHTML[];
+}
+
+export enum NodeType {
+  Text = 'text',
+  Node = 'node',
 }

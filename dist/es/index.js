@@ -1,61 +1,8 @@
 import React, { useContext, Fragment } from 'react';
-import convertHtmlToReact$1, { convertNodeToReactElement } from '@hedgedoc/html-to-react';
 import { Helmet } from 'react-helmet';
-import { convertHtmlToReact } from '@hedgedoc/html-to-react/dist/convertHtmlToReact';
 import { v4 } from 'uuid';
 import { camelCase } from 'change-case';
 import parse from 'html-dom-parser';
-
-const BlockRendererContext = React.createContext({
-    allBlocks: [],
-});
-const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, allBlocks, children, }) => (React.createElement(BlockRendererContext.Provider, { value: {
-        renderComponent,
-        customInternalLinkComponent,
-        siteDomain,
-        allBlocks,
-    } }, children ? children : React.createElement(RootBlockRenderer, null)));
-const useBlockRendererContext = () => {
-    const blockRendererContext = useContext(BlockRendererContext);
-    return blockRendererContext;
-};
-
-/******************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-
-function __rest(s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-}
-
-function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-}
 
 const assignIds = (blocks) => {
     const blocksCopy = JSON.parse(JSON.stringify(blocks));
@@ -243,7 +190,7 @@ const getTypographyStyle = (attributes) => {
 const getStyles = (block) => {
     var _a, _b;
     const inlineStyles = {};
-    const parsed = parse(block.originalContent || '');
+    const parsed = parse(block.htmlContent || '');
     const styleString = ((_b = (_a = parsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.style) || '';
     const individualStyles = styleString.split(';');
     individualStyles.forEach((individualStyle) => {
@@ -257,6 +204,31 @@ const getStyles = (block) => {
     const { attributes } = block;
     return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, inlineStyles), getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes)), getMediaTextWidthStyle(attributes));
 };
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
 
 const getAlias = (blockId = '') => {
     return `A${blockId.split('-').join('')}`;
@@ -337,6 +309,36 @@ const assignGatsbyImage = ({ blocks = [], graphql, coreImage, coreMediaText, cor
     return blocksCopy;
 });
 
+const getLinkTextStyle = (attributes) => {
+    var _a, _b, _c, _d;
+    const textStyle = {};
+    // style.elements.link.color.text
+    if ((_d = (_c = (_b = (_a = attributes === null || attributes === void 0 ? void 0 : attributes.style) === null || _a === void 0 ? void 0 : _a.elements) === null || _b === void 0 ? void 0 : _b.link) === null || _c === void 0 ? void 0 : _c.color) === null || _d === void 0 ? void 0 : _d.text) {
+        textStyle.color = parseValue(attributes.style.elements.link.color.text);
+    }
+    return textStyle;
+};
+
+function convertStyleStringToReact(styleString) {
+    const styles = {};
+    // Split the style string into individual style declarations
+    const declarations = styleString.split(';');
+    declarations.forEach((declaration) => {
+        // Split each style declaration into property and value
+        const [property, value] = declaration.split(':');
+        if (property && value) {
+            // Remove leading/trailing whitespaces from property and value
+            const formattedProperty = property.trim();
+            const formattedValue = value.trim();
+            // Convert CSS property to camelCase for React
+            const camelCasedProperty = formattedProperty.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+            // Add the style to the styles object
+            styles[camelCasedProperty] = formattedValue;
+        }
+    });
+    return styles;
+}
+
 const getBlockById = (allBlocks, id) => {
     let foundBlock = null;
     const findBlock = (bs) => {
@@ -356,12 +358,10 @@ const getBlockById = (allBlocks, id) => {
 };
 
 const getClasses = (block) => {
-    var _a, _b, _c, _d;
-    const originalContentParsed = parse(block.originalContent || '');
-    const dynamicContentParsed = parse(block.dynamicContent || '');
-    let originalContentClassNames = ((_b = (_a = originalContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
-    let dynamicContentClassNames = ((_d = (_c = dynamicContentParsed[0]) === null || _c === void 0 ? void 0 : _c.attribs) === null || _d === void 0 ? void 0 : _d.class) || '';
-    let classNames = `${originalContentClassNames} ${dynamicContentClassNames}`;
+    var _a, _b;
+    const htmlContentParsed = parse(block.htmlContent || '');
+    let htmlContentClassNames = ((_b = (_a = htmlContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
+    let classNames = `${htmlContentClassNames}`;
     if (block.attributes.align) {
         const alignClass = `align${block.attributes.align}`;
         if (!classNames.split(' ').find((c) => c === alignClass)) {
@@ -376,9 +376,76 @@ const getClasses = (block) => {
             classNamesUnique.push(className);
         }
     });
-    console.log('DYNAMIC CLASS NAMES: ', dynamicContentClassNames);
     return classNamesUnique.join(' ');
 };
+
+const BlockRendererContext = React.createContext({
+    blocks: [],
+});
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, blocks, children, }) => {
+    const blocksWithIds = assignIds(blocks);
+    return (React.createElement(BlockRendererContext.Provider, { value: {
+            renderComponent,
+            customInternalLinkComponent,
+            siteDomain,
+            blocks: blocksWithIds,
+        } }, children ? children : React.createElement(RootBlockRenderer, null)));
+};
+const useBlockRendererContext = () => {
+    const blockRendererContext = useContext(BlockRendererContext);
+    return blockRendererContext;
+};
+
+function createReactNodes(html, options) {
+    const traverse = (node) => {
+        // if this is a text node, just return the text
+        if (node.type === 'text') {
+            return node.data;
+        }
+        // if this is already a react component, just return the component
+        if (node.type === 'react') {
+            return node.component || null;
+        }
+        const { type, name, attribs, children } = node;
+        // Convert attributes to React props
+        const props = {};
+        for (const key in attribs) {
+            if (attribs.hasOwnProperty(key)) {
+                if (key === 'style' && typeof attribs[key] === 'string') {
+                    props[key] = convertStyleStringToReact(attribs[key]);
+                }
+                else if (key === 'class') {
+                    props['className'] = attribs[key];
+                }
+                else if (key === 'viewbox') {
+                    props['viewBox'] = attribs[key];
+                }
+                else {
+                    props[key] = attribs[key];
+                }
+            }
+        }
+        if (((options === null || options === void 0 ? void 0 : options.component) && !(options === null || options === void 0 ? void 0 : options.className)) ||
+            ((options === null || options === void 0 ? void 0 : options.component) &&
+                !!(options === null || options === void 0 ? void 0 : options.className) &&
+                attribs.class.split(' ').find((c) => c === options.className))) {
+            return React.createElement(name, Object.assign(Object.assign({}, props), { key: v4() }), options.component);
+        }
+        const reactChildren = children.map((child) => traverse(child));
+        // Create React component based on the node type
+        if (type === 'tag') {
+            return React.createElement(name, Object.assign(Object.assign({}, props), { key: v4() }), ...reactChildren);
+        }
+        else if (type === 'script' || type === 'style') {
+            return React.createElement('div', {
+                dangerouslySetInnerHTML: { __html: node.children[0].data },
+                key: v4(),
+            });
+        }
+        return null; // Return null for unsupported node types
+    };
+    return html.map((el) => traverse(el));
+}
 
 const hasClass = (nd, className) => {
     var _a, _b, _c;
@@ -387,7 +454,8 @@ const hasClass = (nd, className) => {
 };
 
 const TerminalBlock = ({ block }) => {
-    const { allBlocks, customInternalLinkComponent, siteDomain } = useBlockRendererContext();
+    const { blocks: allBlocks, customInternalLinkComponent, siteDomain, } = useBlockRendererContext();
+    const parsedHTML = parse(block.htmlContent || '') || [];
     const getInternalHref = (href) => {
         const siteDomainWithoutProtocol = (siteDomain || '')
             .replace('http://', '')
@@ -397,62 +465,69 @@ const TerminalBlock = ({ block }) => {
             .replace('https://', '')
             .replace(siteDomainWithoutProtocol || '', '');
     };
-    return (React.createElement(Fragment, null, convertHtmlToReact(block.originalContent || block.dynamicContent || '', {
-        transform: (node, index) => {
-            return convertNodeToReactElement(node, index, function transform(n, i) {
-                var _a, _b;
-                // process social link based on parent "core/social-links" block attributes
-                if (block.name === 'core/social-link') {
-                    // get parent
-                    if (block.parentId) {
-                        const parent = getBlockById(allBlocks, block.parentId);
-                        if (!n.attribs) {
-                            n.attribs = {};
-                        }
-                        if (n.name === 'a') {
-                            if ((_a = parent === null || parent === void 0 ? void 0 : parent.attributes) === null || _a === void 0 ? void 0 : _a.openInNewTab) {
-                                n.attribs.target = '_blank';
-                                n.attribs.rel = 'noopener nofollow';
-                                return convertNodeToReactElement(n, i, (n1, i1) => {
-                                    var _a;
-                                    console.log('N1: ', n1);
-                                    if (!n1.attribs) {
-                                        n1.attribs = {};
-                                    }
-                                    if (((_a = parent === null || parent === void 0 ? void 0 : parent.attributes) === null || _a === void 0 ? void 0 : _a.showLabels) &&
-                                        hasClass(n1, 'wp-block-social-link-label')) {
-                                        n1.attribs.class = n1.attribs.class.replace('screen-reader-text', '');
-                                        return convertNodeToReactElement(n1, i1);
-                                    }
-                                });
-                            }
+    const traverse = (els) => {
+        els.forEach((el) => {
+            var _a, _b, _c, _d, _e;
+            // process social link based on parent "core/social-links" block attributes
+            if (block.name === 'core/social-link') {
+                // get parent
+                if (block.parentId) {
+                    const parentBlock = getBlockById(allBlocks, block.parentId);
+                    if (!el.attribs) {
+                        el.attribs = {};
+                    }
+                    if (el.name === 'a') {
+                        if ((_a = parentBlock === null || parentBlock === void 0 ? void 0 : parentBlock.attributes) === null || _a === void 0 ? void 0 : _a.openInNewTab) {
+                            el.attribs.target = '_blank';
+                            el.attribs.rel = 'noopener nofollow';
                         }
                     }
+                    if (((_b = parentBlock === null || parentBlock === void 0 ? void 0 : parentBlock.attributes) === null || _b === void 0 ? void 0 : _b.showLabels) &&
+                        hasClass(el, 'wp-block-social-link-label')) {
+                        el.attribs.class = el.attribs.class.replace('screen-reader-text', '');
+                    }
+                }
+            }
+            if (el.type === 'tag' && el.name === 'a') {
+                // if anchor tag, check to see if it's being rendered within a paragraph block
+                if (block.name === 'core/paragraph') {
+                    // get the link styles
+                    const linkStyles = getLinkTextStyle(block.attributes);
+                    if (!el.attribs) {
+                        el.attribs = {};
+                    }
+                    el.attribs.style = `color: ${linkStyles.color};${el.attribs.style || ''}`;
                 }
                 // process if anchor tag and has customInternalLinkComponent
-                const href = ((_b = n.attribs) === null || _b === void 0 ? void 0 : _b.href) || '';
+                const href = ((_c = el.attribs) === null || _c === void 0 ? void 0 : _c.href) || '';
                 const hrefWithoutProtocol = href
                     .replace('http://', '')
                     .replace('https://', '');
                 const siteDomainWithoutProtocol = (siteDomain || '')
                     .replace('http://', '')
                     .replace('https://', '');
-                if (n.name === 'a' &&
-                    customInternalLinkComponent &&
+                if (customInternalLinkComponent &&
                     ((!!siteDomainWithoutProtocol &&
-                        hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) ===
-                            0) ||
+                        hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
                         hrefWithoutProtocol.indexOf('/') === 0)) {
-                    const reactElement = convertNodeToReactElement(n, i);
-                    const { class: className } = n, attribs = __rest(n, ["class"]);
-                    const internalLinkComponent = customInternalLinkComponent(Object.assign(Object.assign({}, (attribs || {})), { className, internalHref: getInternalHref(href), children: reactElement.props.children }), i);
+                    const reactElement = createReactNodes([el]);
+                    const style = ((_d = el.attribs) === null || _d === void 0 ? void 0 : _d.style)
+                        ? convertStyleStringToReact((_e = el.attribs) === null || _e === void 0 ? void 0 : _e.style)
+                        : null;
+                    const internalLinkComponent = customInternalLinkComponent(Object.assign(Object.assign({}, ((el === null || el === void 0 ? void 0 : el.attribs) || {})), { style, internalHref: getInternalHref(href), children: reactElement }));
                     if (!!internalLinkComponent) {
-                        return internalLinkComponent;
+                        el.type = 'react';
+                        el.component = internalLinkComponent;
                     }
                 }
-            });
-        },
-    })));
+            }
+            if (el.children) {
+                traverse(el.children);
+            }
+        });
+    };
+    traverse(parsedHTML);
+    return React.createElement(Fragment, null, createReactNodes(parsedHTML));
 };
 
 const BlockRenderer = ({ blocks = [] }) => {
@@ -463,98 +538,57 @@ const BlockRenderer = ({ blocks = [] }) => {
     return (React.createElement(React.Fragment, null,
         !!inlineStylesheets.length && (React.createElement(Helmet, null, inlineStylesheets.map((stylesheet, i) => (React.createElement("style", { key: i }, stylesheet))))),
         blocks.map((block) => {
-            var _a, _b;
+            var _a, _b, _c;
             // render custom component for this block if exists
             const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent(block);
             if (component) {
-                return component;
+                return React.createElement(React.Fragment, { key: block.id }, component);
             }
-            const processNode = (shouldProcessNode) => {
-                var _a;
-                if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                    const InnerBlocks = (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks || [] }));
-                    let isRootNode = false;
-                    return convertHtmlToReact$1(block.originalContent || '', {
-                        transform: (node, i) => {
-                            var _a, _b, _c, _d, _e, _f;
-                            if (!((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.class)) {
-                                if (!node.attribs) {
-                                    node.attribs = {};
-                                }
-                            }
-                            // process top level blocks that require is-layout-flex class
-                            if (i === 0 && !isRootNode) {
-                                isRootNode = true;
-                                if (block.name === 'core/buttons' ||
-                                    block.name === 'core/columns' ||
-                                    block.name === 'core/social-links' ||
-                                    block.name === 'core/gallery') {
-                                    node.attribs.class = `${node.attribs.class} is-layout-flex`;
-                                }
-                            }
-                            if ((_c = (_b = block.attributes) === null || _b === void 0 ? void 0 : _b.layout) === null || _c === void 0 ? void 0 : _c.type) {
-                                node.attribs.class = `${node.attribs.class} is-layout-${(_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type}`;
-                            }
-                            if (block.inlineClassnames) {
-                                node.attribs.class = `${node.attribs.class} ${block.inlineClassnames}`;
-                            }
-                            if (block.name === 'core/cover' &&
-                                block.attributes.useFeaturedImage) {
-                                node.attribs.style = `background-image:url(${block.attributes.url});`;
-                                if (!block.attributes.hasParallax) {
-                                    node.attribs.style = `${node.attribs.style}background-size: cover;`;
-                                }
-                            }
-                            // FIX when children have no data value,
-                            // it doesn't correctly "convertNodeToReactElement" / doesn't render
-                            if (!((_f = node.children) === null || _f === void 0 ? void 0 : _f.length)) {
-                                node.children = [
-                                    {
-                                        data: '\n',
-                                    },
-                                ];
-                            }
-                            if (shouldProcessNode(node)) {
-                                return convertNodeToReactElement(node, i, () => InnerBlocks);
-                            }
-                        },
-                    });
-                }
-                else {
-                    // if no innerBlocks
-                    return React.createElement(TerminalBlock, { key: block.id, block: block });
-                }
-            };
-            if (!block.originalContent &&
-                block.dynamicContent &&
-                !((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
-                return processNode(() => true);
-            }
-            if (!block.originalContent && ((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
+            // if no htmlContent but has inner blocks, just render the inner blocks
+            if (!block.htmlContent && ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length)) {
                 return React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks });
             }
-            switch (block.name) {
-                case 'core/media-text': {
-                    return processNode((node) => hasClass(node, 'wp-block-media-text__content'));
-                }
-                case 'core/cover': {
-                    return processNode((node) => hasClass(node, 'wp-block-cover__inner-container'));
-                }
-                default: {
-                    return processNode((node) => {
-                        return true;
-                    });
+            // if no inner blocks
+            // here we need to render the terminal block which will
+            // also cater for the siteDomain replace
+            const parsedHTML = parse(block.htmlContent || '') || [];
+            if (block.htmlContent && !((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
+                return React.createElement(TerminalBlock, { key: block.id, block: block });
+            }
+            // if html content and inner blocks
+            if (block.htmlContent && ((_c = block.innerBlocks) === null || _c === void 0 ? void 0 : _c.length)) {
+                switch (block.name) {
+                    case 'core/block':
+                        return (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks }));
+                    case 'core/media-text': {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes(parsedHTML, {
+                            component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
+                            className: 'wp-block-media-text__content',
+                        })));
+                    }
+                    case 'core/cover': {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes(parsedHTML, {
+                            component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
+                            className: 'wp-block-cover__inner-container',
+                        })));
+                    }
+                    default: {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes(parsedHTML, {
+                            component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
+                        })));
+                    }
                 }
             }
+            return null;
         })));
 };
 const RootBlockRenderer = ({ blocks = [] }) => {
-    const { allBlocks } = useBlockRendererContext();
+    const { blocks: allBlocks } = useBlockRendererContext();
     return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
         React.createElement("main", { className: "is-layout-flow wp-block-group" },
             React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
                 React.createElement(BlockRenderer, { blocks: allBlocks || blocks })))));
 };
 
-export { BlockRenderer, BlockRendererContext, BlockRendererProvider, RootBlockRenderer, assignGatsbyImage, assignIds, getBackgroundStyle, getBlockById, getBorderRadiusStyle, getBorderStyle, getClasses, getMarginStyle, getMediaTextWidthStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue, useBlockRendererContext };
+export { BlockRenderer, BlockRendererContext, BlockRendererProvider, RootBlockRenderer, assignGatsbyImage, assignIds, convertStyleStringToReact, getBackgroundStyle, getBlockById, getBorderRadiusStyle, getBorderStyle, getClasses, getLinkTextStyle, getMarginStyle, getMediaTextWidthStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue, useBlockRendererContext };
 //# sourceMappingURL=index.js.map
