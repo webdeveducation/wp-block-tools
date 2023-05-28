@@ -3699,3 +3699,16 @@ html :where(img[class*=wp-image-]) {
 figure {
   margin: 0 0 1em 0;
 }
+
+.is-content-justification-space-between {
+  justify-content: space-between;
+}
+
+.is-content-justification-left.is-content-justification-left {
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
+
+.is-nowrap.is-nowrap {
+  flex-wrap: nowrap;
+}

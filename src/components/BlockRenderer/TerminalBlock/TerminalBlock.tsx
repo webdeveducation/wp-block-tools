@@ -87,7 +87,7 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
             hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
             hrefWithoutProtocol.indexOf('/') === 0)
         ) {
-          const reactElement: any = createReactNodes([el]);
+          const reactElement: any = createReactNodes({ html: [el], block });
 
           const style = el.attribs?.style
             ? convertStyleStringToReact(el.attribs?.style)
@@ -113,5 +113,5 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
 
   traverse(parsedHTML);
 
-  return <Fragment>{createReactNodes(parsedHTML)}</Fragment>;
+  return <Fragment>{createReactNodes({ html: parsedHTML, block })}</Fragment>;
 };

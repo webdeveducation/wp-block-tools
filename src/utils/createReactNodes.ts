@@ -1,16 +1,20 @@
 import React from 'react';
 import { v4 as uuid } from 'uuid';
 import { convertStyleStringToReact } from './convertStyleStringToReact';
+import { convertAttributesToReactProps } from './convertAttributesToReactProps';
+import { IBlockBase } from '../types';
+import { getBlockGapStyle } from './getBlockGapStyle';
 
-export function createReactNodes(
-  html: any[],
-  options?: {
-    component?: JSX.Element;
-    className?: string;
-    renderInFragment?: boolean;
-  }
-) {
+export function createReactNodes(options: {
+  html: any[];
+  block: IBlockBase;
+  component?: JSX.Element;
+  className?: string;
+}) {
+  const block = options.block;
+  let elementCount: number = -1;
   const traverse = (node: any) => {
+    elementCount++;
     // if this is a text node, just return the text
     if (node.type === 'text') {
       return node.data;
@@ -23,26 +27,22 @@ export function createReactNodes(
 
     const { type, name, attribs, children } = node;
 
-    // Convert attributes to React props
-    const props: { [key: string]: any } = {};
-    for (const key in attribs) {
-      if (attribs.hasOwnProperty(key)) {
-        if (key === 'style' && typeof attribs[key] === 'string') {
-          props[key] = convertStyleStringToReact(attribs[key]);
-        } else if (key === 'class') {
-          props['className'] = attribs[key];
-        } else if (key === 'viewbox') {
-          props['viewBox'] = attribs[key];
-        } else {
-          props[key] = attribs[key];
-        }
+    const props: { [key: string]: any } =
+      convertAttributesToReactProps(attribs);
+
+    if (elementCount === 0 && block.name === 'core/group') {
+      if (!props.style) {
+        props.style = {};
       }
+
+      props.style = { ...props.style, ...getBlockGapStyle(block.attributes) };
     }
 
     if (
       (options?.component && !options?.className) ||
       (options?.component &&
         !!options?.className &&
+        attribs.class &&
         attribs.class.split(' ').find((c: string) => c === options.className))
     ) {
       return React.createElement(
@@ -71,5 +71,5 @@ export function createReactNodes(
     return null; // Return null for unsupported node types
   };
 
-  return html.map((el: any) => traverse(el));
+  return options.html.map((el: any) => traverse(el));
 }

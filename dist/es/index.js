@@ -1,4 +1,4 @@
-import React, { useContext, Fragment } from 'react';
+import React, { useContext, Fragment, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { v4 } from 'uuid';
 import { camelCase } from 'change-case';
@@ -398,8 +398,57 @@ const useBlockRendererContext = () => {
     return blockRendererContext;
 };
 
-function createReactNodes(html, options) {
+const convertAttributesToReactProps = (attribs) => {
+    // Convert attributes to React props
+    const props = {};
+    for (const key in attribs) {
+        if (attribs.hasOwnProperty(key)) {
+            if (key === 'style' && typeof attribs[key] === 'string') {
+                props[key] = convertStyleStringToReact(attribs[key]);
+            }
+            else if (key === 'class') {
+                props['className'] = attribs[key];
+            }
+            else if (key === 'viewbox') {
+                props['viewBox'] = attribs[key];
+            }
+            else if (key === 'for') {
+                props['htmlFor'] = attribs[key];
+            }
+            else if (key === 'tabindex') {
+                props['tabIndex'] = attribs[key];
+            }
+            else if (key === 'srcset') {
+                props['srcSet'] = attribs[key];
+            }
+            else if (key === 'value') {
+                props['defaultValue'] = attribs[key];
+            }
+            else if (key === 'datetime') {
+                props['dateTime'] = attribs[key];
+            }
+            else {
+                props[key] = attribs[key];
+            }
+        }
+    }
+    return props;
+};
+
+const getBlockGapStyle = (attributes) => {
+    var _a, _b;
+    const blockGapStyle = {};
+    if ((_b = (_a = attributes.style) === null || _a === void 0 ? void 0 : _a.spacing) === null || _b === void 0 ? void 0 : _b.blockGap) {
+        blockGapStyle.gap = parseValue(attributes.style.spacing.blockGap);
+    }
+    return blockGapStyle;
+};
+
+function createReactNodes(options) {
+    const block = options.block;
+    let elementCount = -1;
     const traverse = (node) => {
+        elementCount++;
         // if this is a text node, just return the text
         if (node.type === 'text') {
             return node.data;
@@ -409,27 +458,17 @@ function createReactNodes(html, options) {
             return node.component || null;
         }
         const { type, name, attribs, children } = node;
-        // Convert attributes to React props
-        const props = {};
-        for (const key in attribs) {
-            if (attribs.hasOwnProperty(key)) {
-                if (key === 'style' && typeof attribs[key] === 'string') {
-                    props[key] = convertStyleStringToReact(attribs[key]);
-                }
-                else if (key === 'class') {
-                    props['className'] = attribs[key];
-                }
-                else if (key === 'viewbox') {
-                    props['viewBox'] = attribs[key];
-                }
-                else {
-                    props[key] = attribs[key];
-                }
+        const props = convertAttributesToReactProps(attribs);
+        if (elementCount === 0 && block.name === 'core/group') {
+            if (!props.style) {
+                props.style = {};
             }
+            props.style = Object.assign(Object.assign({}, props.style), getBlockGapStyle(block.attributes));
         }
         if (((options === null || options === void 0 ? void 0 : options.component) && !(options === null || options === void 0 ? void 0 : options.className)) ||
             ((options === null || options === void 0 ? void 0 : options.component) &&
                 !!(options === null || options === void 0 ? void 0 : options.className) &&
+                attribs.class &&
                 attribs.class.split(' ').find((c) => c === options.className))) {
             return React.createElement(name, Object.assign(Object.assign({}, props), { key: v4() }), options.component);
         }
@@ -446,7 +485,7 @@ function createReactNodes(html, options) {
         }
         return null; // Return null for unsupported node types
     };
-    return html.map((el) => traverse(el));
+    return options.html.map((el) => traverse(el));
 }
 
 const hasClass = (nd, className) => {
@@ -512,7 +551,7 @@ const TerminalBlock = ({ block }) => {
                     ((!!siteDomainWithoutProtocol &&
                         hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
                         hrefWithoutProtocol.indexOf('/') === 0)) {
-                    const reactElement = createReactNodes([el]);
+                    const reactElement = createReactNodes({ html: [el], block });
                     const style = ((_d = el.attribs) === null || _d === void 0 ? void 0 : _d.style)
                         ? convertStyleStringToReact((_e = el.attribs) === null || _e === void 0 ? void 0 : _e.style)
                         : null;
@@ -529,8 +568,52 @@ const TerminalBlock = ({ block }) => {
         });
     };
     traverse(parsedHTML);
-    return React.createElement(Fragment, null, createReactNodes(parsedHTML));
+    return React.createElement(Fragment, null, createReactNodes({ html: parsedHTML, block }));
 };
+
+function Navigation({ block }) {
+    const { htmlContent, innerBlocks } = block;
+    const parsedHTML = parse(htmlContent || '') || [];
+    useEffect(() => {
+        var _a, _b, _c, _d;
+        // logic to detect open / close mobile menu
+        const tempHolder = document.createElement('div');
+        tempHolder.innerHTML = htmlContent || '';
+        const tempEl = (_a = tempHolder.querySelectorAll('[data-micromodal-trigger]')) === null || _a === void 0 ? void 0 : _a[0];
+        if (tempEl) {
+            const modalId = tempEl.getAttribute('data-micromodal-trigger') || '';
+            const el = (_b = document.querySelectorAll(`[data-micromodal-trigger=${modalId}]`)) === null || _b === void 0 ? void 0 : _b[0];
+            const handleOpenClick = () => {
+                var _a;
+                (_a = document
+                    .getElementById(modalId)) === null || _a === void 0 ? void 0 : _a.classList.add('is-menu-open', 'has-modal-open');
+            };
+            const handleCloseClick = () => {
+                var _a;
+                (_a = document
+                    .getElementById(modalId)) === null || _a === void 0 ? void 0 : _a.classList.remove('is-menu-open', 'has-modal-open');
+            };
+            const closeButton = (_d = (_c = document
+                .getElementById(modalId)) === null || _c === void 0 ? void 0 : _c.querySelectorAll('[data-micromodal-close]')) === null || _d === void 0 ? void 0 : _d[0];
+            if (closeButton) {
+                closeButton.addEventListener('click', handleCloseClick);
+            }
+            el.addEventListener('click', handleOpenClick);
+            return () => {
+                if (closeButton) {
+                    closeButton.removeEventListener('click', handleCloseClick);
+                }
+                el.removeEventListener('click', handleOpenClick);
+            };
+        }
+    }, []);
+    return (React.createElement(React.Fragment, null, createReactNodes({
+        html: parsedHTML,
+        block,
+        component: React.createElement(BlockRenderer, { blocks: innerBlocks }),
+        className: 'wp-block-navigation__responsive-container-content',
+    })));
+}
 
 const BlockRenderer = ({ blocks = [] }) => {
     const { renderComponent } = useBlockRendererContext();
@@ -542,7 +625,11 @@ const BlockRenderer = ({ blocks = [] }) => {
         blocks.map((block) => {
             var _a, _b, _c;
             // render custom component for this block if exists
-            const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent(block);
+            const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent({
+                block,
+                styles: getStyles(block),
+                classNames: getClasses(block),
+            });
             if (component) {
                 return React.createElement(React.Fragment, { key: block.id }, component);
             }
@@ -563,19 +650,36 @@ const BlockRenderer = ({ blocks = [] }) => {
                     case 'core/block':
                         return (React.createElement(BlockRenderer, { key: block.id, blocks: block.innerBlocks }));
                     case 'core/media-text': {
-                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes(parsedHTML, {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes({
+                            html: parsedHTML,
+                            block,
                             component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-media-text__content',
                         })));
                     }
                     case 'core/cover': {
-                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes(parsedHTML, {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes({
+                            html: parsedHTML,
+                            block,
                             component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-cover__inner-container',
                         })));
                     }
+                    case 'core/navigation-submenu': {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes({
+                            html: parsedHTML,
+                            block,
+                            component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
+                            className: 'wp-block-navigation__submenu-container',
+                        })));
+                    }
+                    case 'core/navigation': {
+                        return React.createElement(Navigation, { key: block.id, block: block });
+                    }
                     default: {
-                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes(parsedHTML, {
+                        return (React.createElement(React.Fragment, { key: block.id }, createReactNodes({
+                            html: parsedHTML,
+                            block,
                             component: React.createElement(BlockRenderer, { blocks: block.innerBlocks }),
                         })));
                     }
@@ -586,10 +690,8 @@ const BlockRenderer = ({ blocks = [] }) => {
 };
 const RootBlockRenderer = ({ blocks = [] }) => {
     const { blocks: allBlocks } = useBlockRendererContext();
-    return (React.createElement("div", { className: "wp-site-blocks", style: { paddingTop: 0 } },
-        React.createElement("main", { className: "is-layout-flow wp-block-group" },
-            React.createElement("div", { className: "has-global-padding is-layout-constrained entry-content wp-block-post-content" },
-                React.createElement(BlockRenderer, { blocks: allBlocks || blocks })))));
+    return (React.createElement("div", { className: "wp-site-blocks" },
+        React.createElement(BlockRenderer, { blocks: allBlocks || blocks })));
 };
 
 export { BlockRenderer, BlockRendererContext, BlockRendererProvider, RootBlockRenderer, assignGatsbyImage, assignIds, convertStyleStringToReact, getBackgroundStyle, getBlockById, getBorderRadiusStyle, getBorderStyle, getClasses, getLinkTextStyle, getMarginStyle, getMediaTextWidthStyle, getPaddingStyle, getStyles, getTextStyle, getTypographyStyle, parseValue, useBlockRendererContext };

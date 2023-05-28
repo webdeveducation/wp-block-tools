@@ -6,6 +6,8 @@ import { TerminalBlock } from './TerminalBlock';
 import './style.scss';
 import { createReactNodes } from '../../utils/createReactNodes';
 import parse from 'html-dom-parser';
+import Navigation from '../Blocks/Navigation';
+import { getClasses, getStyles } from '../../utils';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
@@ -29,7 +31,11 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
       )}
       {blocks.map((block) => {
         // render custom component for this block if exists
-        const component = renderComponent?.(block);
+        const component = renderComponent?.({
+          block,
+          styles: getStyles(block),
+          classNames: getClasses(block),
+        });
         if (component) {
           return <React.Fragment key={block.id}>{component}</React.Fragment>;
         }
@@ -57,7 +63,9 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
             case 'core/media-text': {
               return (
                 <React.Fragment key={block.id}>
-                  {createReactNodes(parsedHTML, {
+                  {createReactNodes({
+                    html: parsedHTML,
+                    block,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-media-text__content',
                   })}
@@ -67,17 +75,36 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
             case 'core/cover': {
               return (
                 <React.Fragment key={block.id}>
-                  {createReactNodes(parsedHTML, {
+                  {createReactNodes({
+                    html: parsedHTML,
+                    block,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-cover__inner-container',
                   })}
                 </React.Fragment>
               );
             }
+            case 'core/navigation-submenu': {
+              return (
+                <React.Fragment key={block.id}>
+                  {createReactNodes({
+                    html: parsedHTML,
+                    block,
+                    component: <BlockRenderer blocks={block.innerBlocks} />,
+                    className: 'wp-block-navigation__submenu-container',
+                  })}
+                </React.Fragment>
+              );
+            }
+            case 'core/navigation': {
+              return <Navigation key={block.id} block={block} />;
+            }
             default: {
               return (
                 <React.Fragment key={block.id}>
-                  {createReactNodes(parsedHTML, {
+                  {createReactNodes({
+                    html: parsedHTML,
+                    block,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                   })}
                 </React.Fragment>
@@ -94,12 +121,8 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
 export const RootBlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
   const { blocks: allBlocks } = useBlockRendererContext();
   return (
-    <div className="wp-site-blocks" style={{ paddingTop: 0 }}>
-      <main className="is-layout-flow wp-block-group">
-        <div className="has-global-padding is-layout-constrained entry-content wp-block-post-content">
-          <BlockRenderer blocks={allBlocks || blocks} />
-        </div>
-      </main>
+    <div className="wp-site-blocks">
+      <BlockRenderer blocks={allBlocks || blocks} />
     </div>
   );
 };

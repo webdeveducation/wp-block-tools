@@ -1,6 +1,8 @@
 /// <reference types="react" />
-export declare function createReactNodes(html: any[], options?: {
+import { IBlockBase } from '../types';
+export declare function createReactNodes(options: {
+    html: any[];
+    block: IBlockBase;
     component?: JSX.Element;
     className?: string;
-    renderInFragment?: boolean;
 }): any[];
