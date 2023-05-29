@@ -3704,7 +3704,8 @@ figure {
   justify-content: space-between;
 }
 
-.is-content-justification-left.is-content-justification-left {
+.is-content-justification-left.is-content-justification-left,
+.is-content-justification-left.is-content-justification-left > * {
   margin-right: auto !important;
   margin-left: 0 !important;
 }

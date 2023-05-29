@@ -326,6 +326,35 @@ const getLinkTextStyle = (attributes) => {
     return textStyle;
 };
 
+const getBlockGapStyle = (attributes) => {
+    var _a, _b;
+    const blockGapStyle = {};
+    if ((_b = (_a = attributes.style) === null || _a === void 0 ? void 0 : _a.spacing) === null || _b === void 0 ? void 0 : _b.blockGap) {
+        const blockGap = attributes.style.spacing.blockGap;
+        if (typeof blockGap === 'object') {
+            if (blockGap.left) {
+                blockGapStyle.columnGap = parseValue(blockGap.left);
+            }
+            if (blockGap.top) {
+                blockGapStyle.rowGap = parseValue(blockGap.top);
+            }
+        }
+        else {
+            blockGapStyle.gap = parseValue(attributes.style.spacing.blockGap);
+        }
+    }
+    return blockGapStyle;
+};
+
+const getBlockGapStyleForChild = (attributes) => {
+    var _a, _b;
+    const blockGapStyle = {};
+    if ((_b = (_a = attributes.style) === null || _a === void 0 ? void 0 : _a.spacing) === null || _b === void 0 ? void 0 : _b.blockGap) {
+        blockGapStyle.marginBlockStart = parseValue(attributes.style.spacing.blockGap);
+    }
+    return blockGapStyle;
+};
+
 function convertStyleStringToReact(styleString) {
     const styles = {};
     // Split the style string into individual style declarations
@@ -434,6 +463,9 @@ const convertAttributesToReactProps = (attribs) => {
             else if (key === 'datetime') {
                 props['dateTime'] = attribs[key];
             }
+            else if (key === 'stroke-width') {
+                props['strokeWidth'] = attribs[key];
+            }
             else {
                 props[key] = attribs[key];
             }
@@ -442,20 +474,10 @@ const convertAttributesToReactProps = (attribs) => {
     return props;
 };
 
-const getBlockGapStyle = (attributes) => {
-    var _a, _b;
-    const blockGapStyle = {};
-    if ((_b = (_a = attributes.style) === null || _a === void 0 ? void 0 : _a.spacing) === null || _b === void 0 ? void 0 : _b.blockGap) {
-        blockGapStyle.gap = parseValue(attributes.style.spacing.blockGap);
-    }
-    return blockGapStyle;
-};
-
 function createReactNodes(options) {
     const block = options.block;
-    let elementCount = -1;
     const traverse = (node) => {
-        elementCount++;
+        var _a;
         // if this is a text node, just return the text
         if (node.type === 'text') {
             return node.data;
@@ -466,11 +488,19 @@ function createReactNodes(options) {
         }
         const { type, name, attribs, children } = node;
         const props = convertAttributesToReactProps(attribs);
-        if (elementCount === 0 && block.name === 'core/group') {
-            if (!props.style) {
-                props.style = {};
+        if (!props.style) {
+            props.style = {};
+        }
+        props.style = Object.assign(Object.assign({}, props.style), getBlockGapStyle(block.attributes));
+        // if top level element and if generated class name of wp-container-{id}
+        // we need to apply styles from the parent to this block
+        if (attribs.class &&
+            ((_a = attribs.class) === null || _a === void 0 ? void 0 : _a.indexOf('wp-container-')) !== -1 &&
+            block.parentId) {
+            const parentBlock = getBlockById(options.allBlocks, block.parentId);
+            if ((parentBlock === null || parentBlock === void 0 ? void 0 : parentBlock.name) === 'core/column') {
+                props.style = Object.assign(Object.assign({}, props.style), getBlockGapStyleForChild(parentBlock.attributes));
             }
-            props.style = Object.assign(Object.assign({}, props.style), getBlockGapStyle(block.attributes));
         }
         if (((options === null || options === void 0 ? void 0 : options.component) && !(options === null || options === void 0 ? void 0 : options.className)) ||
             ((options === null || options === void 0 ? void 0 : options.component) &&
@@ -558,7 +588,11 @@ const TerminalBlock = ({ block }) => {
                     ((!!siteDomainWithoutProtocol &&
                         hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
                         hrefWithoutProtocol.indexOf('/') === 0)) {
-                    const reactElement = createReactNodes({ html: [el], block });
+                    const reactElement = createReactNodes({
+                        html: [el],
+                        block,
+                        allBlocks,
+                    });
                     const style = ((_d = el.attribs) === null || _d === void 0 ? void 0 : _d.style)
                         ? convertStyleStringToReact((_e = el.attribs) === null || _e === void 0 ? void 0 : _e.style)
                         : null;
@@ -575,10 +609,10 @@ const TerminalBlock = ({ block }) => {
         });
     };
     traverse(parsedHTML);
-    return React__default["default"].createElement(React.Fragment, null, createReactNodes({ html: parsedHTML, block }));
+    return (React__default["default"].createElement(React.Fragment, null, createReactNodes({ html: parsedHTML, block, allBlocks })));
 };
 
-function Navigation({ block }) {
+function Navigation({ block, allBlocks }) {
     const { htmlContent, innerBlocks } = block;
     const parsedHTML = parse__default["default"](htmlContent || '') || [];
     React.useEffect(() => {
@@ -617,20 +651,21 @@ function Navigation({ block }) {
     return (React__default["default"].createElement(React__default["default"].Fragment, null, createReactNodes({
         html: parsedHTML,
         block,
+        allBlocks,
         component: React__default["default"].createElement(BlockRenderer, { blocks: innerBlocks }),
-        className: 'wp-block-navigation__responsive-container-content',
+        className: 'wp-block-navigation__container',
     })));
 }
 
 const BlockRenderer = ({ blocks = [] }) => {
-    const { renderComponent } = useBlockRendererContext();
+    const { renderComponent, blocks: allBlocks } = useBlockRendererContext();
     const inlineStylesheets = blocks
         .filter((block) => !!block.inlineStylesheet)
         .map((block) => block.inlineStylesheet);
     return (React__default["default"].createElement(React__default["default"].Fragment, null,
         !!inlineStylesheets.length && (React__default["default"].createElement(reactHelmet.Helmet, null, inlineStylesheets.map((stylesheet, i) => (React__default["default"].createElement("style", { key: i }, stylesheet))))),
         blocks.map((block) => {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             // render custom component for this block if exists
             const component = renderComponent === null || renderComponent === void 0 ? void 0 : renderComponent({
                 block,
@@ -647,7 +682,7 @@ const BlockRenderer = ({ blocks = [] }) => {
             // if no inner blocks
             // here we need to render the terminal block which will
             // also cater for the siteDomain replace
-            const parsedHTML = parse__default["default"](block.htmlContent || '') || [];
+            let parsedHTML = parse__default["default"](block.htmlContent || '') || [];
             if (block.htmlContent && !((_b = block.innerBlocks) === null || _b === void 0 ? void 0 : _b.length)) {
                 return React__default["default"].createElement(TerminalBlock, { key: block.id, block: block });
             }
@@ -660,6 +695,7 @@ const BlockRenderer = ({ blocks = [] }) => {
                         return (React__default["default"].createElement(React__default["default"].Fragment, { key: block.id }, createReactNodes({
                             html: parsedHTML,
                             block,
+                            allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-media-text__content',
                         })));
@@ -668,25 +704,42 @@ const BlockRenderer = ({ blocks = [] }) => {
                         return (React__default["default"].createElement(React__default["default"].Fragment, { key: block.id }, createReactNodes({
                             html: parsedHTML,
                             block,
+                            allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-cover__inner-container',
                         })));
                     }
                     case 'core/navigation-submenu': {
+                        // get parent block
+                        let showSubmenuIcon = false;
+                        if (block.parentId) {
+                            const parentBlock = getBlockById(allBlocks, block.parentId);
+                            if (parentBlock) {
+                                showSubmenuIcon = !!((_d = parentBlock.attributes) === null || _d === void 0 ? void 0 : _d.showSubmenuIcon);
+                            }
+                        }
+                        if (showSubmenuIcon) {
+                            let newHtmlContent = `${block.htmlContent}`;
+                            newHtmlContent = newHtmlContent.replace('</a>', `</a><button class="wp-block-navigation__submenu-icon wp-block-navigation-submenu__toggle" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M1.50002 4L6.00002 8L10.5 4" stroke-width="1.5"></path></svg></button>`);
+                            console.log('IN HERE: ', newHtmlContent);
+                            parsedHTML = parse__default["default"](newHtmlContent || '') || [];
+                        }
                         return (React__default["default"].createElement(React__default["default"].Fragment, { key: block.id }, createReactNodes({
                             html: parsedHTML,
                             block,
+                            allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-navigation__submenu-container',
                         })));
                     }
                     case 'core/navigation': {
-                        return React__default["default"].createElement(Navigation, { key: block.id, block: block });
+                        return (React__default["default"].createElement(Navigation, { key: block.id, block: block, allBlocks: allBlocks }));
                     }
                     default: {
                         return (React__default["default"].createElement(React__default["default"].Fragment, { key: block.id }, createReactNodes({
                             html: parsedHTML,
                             block,
+                            allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                         })));
                     }
@@ -710,6 +763,8 @@ exports.assignIds = assignIds;
 exports.convertStyleStringToReact = convertStyleStringToReact;
 exports.getBackgroundStyle = getBackgroundStyle;
 exports.getBlockById = getBlockById;
+exports.getBlockGapStyle = getBlockGapStyle;
+exports.getBlockGapStyleForChild = getBlockGapStyleForChild;
 exports.getBorderRadiusStyle = getBorderRadiusStyle;
 exports.getBorderStyle = getBorderStyle;
 exports.getClasses = getClasses;

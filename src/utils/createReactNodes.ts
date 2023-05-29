@@ -4,9 +4,12 @@ import { convertStyleStringToReact } from './convertStyleStringToReact';
 import { convertAttributesToReactProps } from './convertAttributesToReactProps';
 import { IBlockBase } from '../types';
 import { getBlockGapStyle } from './getBlockGapStyle';
+import { getBlockById } from './getBlockById';
+import { getBlockGapStyleForChild } from './getBlockGapStyleForChild';
 
 export function createReactNodes(options: {
   html: any[];
+  allBlocks: IBlockBase[];
   block: IBlockBase;
   component?: JSX.Element;
   className?: string;
@@ -30,12 +33,27 @@ export function createReactNodes(options: {
     const props: { [key: string]: any } =
       convertAttributesToReactProps(attribs);
 
-    if (elementCount === 0 && block.name === 'core/group') {
-      if (!props.style) {
-        props.style = {};
-      }
+    if (!props.style) {
+      props.style = {};
+    }
 
-      props.style = { ...props.style, ...getBlockGapStyle(block.attributes) };
+    props.style = { ...props.style, ...getBlockGapStyle(block.attributes) };
+
+    // if top level element and if generated class name of wp-container-{id}
+    // we need to apply styles from the parent to this block
+    if (
+      attribs.class &&
+      attribs.class?.indexOf('wp-container-') !== -1 &&
+      block.parentId
+    ) {
+      const parentBlock = getBlockById(options.allBlocks, block.parentId);
+
+      if (parentBlock?.name === 'core/column') {
+        props.style = {
+          ...props.style,
+          ...getBlockGapStyleForChild(parentBlock.attributes),
+        };
+      }
     }
 
     if (

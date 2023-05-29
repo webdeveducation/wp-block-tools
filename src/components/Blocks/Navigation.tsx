@@ -6,9 +6,10 @@ import parse from 'html-dom-parser';
 
 type Props = {
   block: IBlockBase;
+  allBlocks: IBlockBase[];
 };
 
-export default function Navigation({ block }: Props) {
+export default function Navigation({ block, allBlocks }: Props) {
   const { htmlContent, innerBlocks } = block;
   const parsedHTML: any = parse(htmlContent || '') || [];
 
@@ -55,8 +56,9 @@ export default function Navigation({ block }: Props) {
       {createReactNodes({
         html: parsedHTML,
         block,
+        allBlocks,
         component: <BlockRenderer blocks={innerBlocks} />,
-        className: 'wp-block-navigation__responsive-container-content',
+        className: 'wp-block-navigation__container',
       })}
     </React.Fragment>
   );

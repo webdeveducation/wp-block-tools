@@ -23,6 +23,8 @@ export const convertAttributesToReactProps = (attribs: {
         props['defaultValue'] = attribs[key];
       } else if (key === 'datetime') {
         props['dateTime'] = attribs[key];
+      } else if (key === 'stroke-width') {
+        props['strokeWidth'] = attribs[key];
       } else {
         props[key] = attribs[key];
       }

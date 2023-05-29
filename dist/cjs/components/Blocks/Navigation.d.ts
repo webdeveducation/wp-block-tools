@@ -2,6 +2,7 @@
 import { IBlockBase } from '../../types';
 type Props = {
     block: IBlockBase;
+    allBlocks: IBlockBase[];
 };
-export default function Navigation({ block }: Props): JSX.Element;
+export default function Navigation({ block, allBlocks }: Props): JSX.Element;
 export {};

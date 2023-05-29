@@ -7,14 +7,14 @@ import './style.scss';
 import { createReactNodes } from '../../utils/createReactNodes';
 import parse from 'html-dom-parser';
 import Navigation from '../Blocks/Navigation';
-import { getClasses, getStyles } from '../../utils';
+import { getBlockById, getClasses, getStyles } from '../../utils';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
 };
 
 export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
-  const { renderComponent } = useBlockRendererContext();
+  const { renderComponent, blocks: allBlocks } = useBlockRendererContext();
 
   const inlineStylesheets = blocks
     .filter((block) => !!block.inlineStylesheet)
@@ -48,7 +48,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
         // if no inner blocks
         // here we need to render the terminal block which will
         // also cater for the siteDomain replace
-        const parsedHTML: any = parse(block.htmlContent || '') || [];
+        let parsedHTML: any = parse(block.htmlContent || '') || [];
         if (block.htmlContent && !block.innerBlocks?.length) {
           return <TerminalBlock key={block.id} block={block} />;
         }
@@ -66,6 +66,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                   {createReactNodes({
                     html: parsedHTML,
                     block,
+                    allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-media-text__content',
                   })}
@@ -78,6 +79,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                   {createReactNodes({
                     html: parsedHTML,
                     block,
+                    allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-cover__inner-container',
                   })}
@@ -85,11 +87,29 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
               );
             }
             case 'core/navigation-submenu': {
+              // get parent block
+              let showSubmenuIcon = false;
+              if (block.parentId) {
+                const parentBlock = getBlockById(allBlocks, block.parentId);
+                if (parentBlock) {
+                  showSubmenuIcon = !!parentBlock.attributes?.showSubmenuIcon;
+                }
+              }
+              if (showSubmenuIcon) {
+                let newHtmlContent = `${block.htmlContent}`;
+                newHtmlContent = newHtmlContent.replace(
+                  '</a>',
+                  `</a><button class="wp-block-navigation__submenu-icon wp-block-navigation-submenu__toggle" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M1.50002 4L6.00002 8L10.5 4" stroke-width="1.5"></path></svg></button>`
+                );
+                console.log('IN HERE: ', newHtmlContent);
+                parsedHTML = parse(newHtmlContent || '') || [];
+              }
               return (
                 <React.Fragment key={block.id}>
                   {createReactNodes({
                     html: parsedHTML,
                     block,
+                    allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-navigation__submenu-container',
                   })}
@@ -97,7 +117,13 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
               );
             }
             case 'core/navigation': {
-              return <Navigation key={block.id} block={block} />;
+              return (
+                <Navigation
+                  key={block.id}
+                  block={block}
+                  allBlocks={allBlocks}
+                />
+              );
             }
             default: {
               return (
@@ -105,6 +131,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                   {createReactNodes({
                     html: parsedHTML,
                     block,
+                    allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                   })}
                 </React.Fragment>
