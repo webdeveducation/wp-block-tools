@@ -14,13 +14,13 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
   const {
     blocks: allBlocks,
     customInternalLinkComponent,
-    siteDomain,
+    wpDomain,
   } = useBlockRendererContext();
 
   const parsedHTML: any[] = parse(block.htmlContent || '') || [];
 
   const getInternalHref = (href: string) => {
-    const siteDomainWithoutProtocol = (siteDomain || '')
+    const siteDomainWithoutProtocol = (wpDomain || '')
       .replace('http://', '')
       .replace('https://', '');
 
@@ -77,7 +77,7 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
         const hrefWithoutProtocol = href
           .replace('http://', '')
           .replace('https://', '');
-        const siteDomainWithoutProtocol = (siteDomain || '')
+        const siteDomainWithoutProtocol = (wpDomain || '')
           .replace('http://', '')
           .replace('https://', '');
 

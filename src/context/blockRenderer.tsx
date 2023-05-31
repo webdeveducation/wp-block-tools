@@ -11,7 +11,7 @@ export type IBlockRendererContext = {
     styles?: { [key: string]: string | number };
   }) => React.ReactElement | null;
   customInternalLinkComponent?: (el: any) => React.ReactElement | null;
-  siteDomain?: string;
+  wpDomain?: string;
 };
 
 export const BlockRendererContext = React.createContext<IBlockRendererContext>({
@@ -20,7 +20,7 @@ export const BlockRendererContext = React.createContext<IBlockRendererContext>({
 export const BlockRendererProvider = ({
   renderComponent,
   customInternalLinkComponent,
-  siteDomain,
+  wpDomain,
   blocks,
   children,
 }: IBlockRendererContext & { children?: JSX.Element }) => {
@@ -30,7 +30,7 @@ export const BlockRendererProvider = ({
       value={{
         renderComponent,
         customInternalLinkComponent,
-        siteDomain,
+        wpDomain,
         blocks: blocksWithIds,
       }}
     >

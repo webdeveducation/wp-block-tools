@@ -420,12 +420,12 @@ const getClasses = (block) => {
 const BlockRendererContext = React__default["default"].createContext({
     blocks: [],
 });
-const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, siteDomain, blocks, children, }) => {
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, wpDomain, blocks, children, }) => {
     const blocksWithIds = assignIds(blocks);
     return (React__default["default"].createElement(BlockRendererContext.Provider, { value: {
             renderComponent,
             customInternalLinkComponent,
-            siteDomain,
+            wpDomain,
             blocks: blocksWithIds,
         } }, children ? children : React__default["default"].createElement(RootBlockRenderer, null)));
 };
@@ -542,10 +542,10 @@ const hasClass = (nd, className) => {
 };
 
 const TerminalBlock = ({ block }) => {
-    const { blocks: allBlocks, customInternalLinkComponent, siteDomain, } = useBlockRendererContext();
+    const { blocks: allBlocks, customInternalLinkComponent, wpDomain, } = useBlockRendererContext();
     const parsedHTML = parse__default["default"](block.htmlContent || '') || [];
     const getInternalHref = (href) => {
-        const siteDomainWithoutProtocol = (siteDomain || '')
+        const siteDomainWithoutProtocol = (wpDomain || '')
             .replace('http://', '')
             .replace('https://', '');
         return href
@@ -591,7 +591,7 @@ const TerminalBlock = ({ block }) => {
                 const hrefWithoutProtocol = href
                     .replace('http://', '')
                     .replace('https://', '');
-                const siteDomainWithoutProtocol = (siteDomain || '')
+                const siteDomainWithoutProtocol = (wpDomain || '')
                     .replace('http://', '')
                     .replace('https://', '');
                 if (customInternalLinkComponent &&
