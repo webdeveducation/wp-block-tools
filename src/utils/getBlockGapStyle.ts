@@ -2,7 +2,7 @@ import { parseValue } from './parseValue';
 
 export const getBlockGapStyle = (attributes: any) => {
   const blockGapStyle: any = {};
-  if (attributes.style?.spacing?.blockGap) {
+  if (attributes?.style?.spacing?.blockGap) {
     const blockGap = attributes.style.spacing.blockGap;
     if (typeof blockGap === 'object') {
       if (blockGap.left) {
@@ -12,7 +12,7 @@ export const getBlockGapStyle = (attributes: any) => {
         blockGapStyle.rowGap = parseValue(blockGap.top);
       }
     } else {
-      blockGapStyle.gap = parseValue(attributes.style.spacing.blockGap);
+      blockGapStyle.gap = parseValue(blockGap);
     }
   }
   return blockGapStyle;

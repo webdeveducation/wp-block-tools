@@ -25,6 +25,12 @@ export const convertAttributesToReactProps = (attribs: {
         props['dateTime'] = attribs[key];
       } else if (key === 'stroke-width') {
         props['strokeWidth'] = attribs[key];
+      } else if (key === 'maxlength') {
+        props['maxLength'] = attribs[key];
+      } else if (key === 'novalidate') {
+        props['noValidate'] = attribs[key];
+      } else if (key === 'autocomplete') {
+        props['autoComplete'] = attribs[key];
       } else {
         props[key] = attribs[key];
       }

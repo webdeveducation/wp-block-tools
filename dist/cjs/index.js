@@ -329,7 +329,7 @@ const getLinkTextStyle = (attributes) => {
 const getBlockGapStyle = (attributes) => {
     var _a, _b;
     const blockGapStyle = {};
-    if ((_b = (_a = attributes.style) === null || _a === void 0 ? void 0 : _a.spacing) === null || _b === void 0 ? void 0 : _b.blockGap) {
+    if ((_b = (_a = attributes === null || attributes === void 0 ? void 0 : attributes.style) === null || _a === void 0 ? void 0 : _a.spacing) === null || _b === void 0 ? void 0 : _b.blockGap) {
         const blockGap = attributes.style.spacing.blockGap;
         if (typeof blockGap === 'object') {
             if (blockGap.left) {
@@ -340,7 +340,7 @@ const getBlockGapStyle = (attributes) => {
             }
         }
         else {
-            blockGapStyle.gap = parseValue(attributes.style.spacing.blockGap);
+            blockGapStyle.gap = parseValue(blockGap);
         }
     }
     return blockGapStyle;
@@ -466,6 +466,15 @@ const convertAttributesToReactProps = (attribs) => {
             else if (key === 'stroke-width') {
                 props['strokeWidth'] = attribs[key];
             }
+            else if (key === 'maxlength') {
+                props['maxLength'] = attribs[key];
+            }
+            else if (key === 'novalidate') {
+                props['noValidate'] = attribs[key];
+            }
+            else if (key === 'autocomplete') {
+                props['autoComplete'] = attribs[key];
+            }
             else {
                 props[key] = attribs[key];
             }
@@ -494,7 +503,7 @@ function createReactNodes(options) {
         props.style = Object.assign(Object.assign({}, props.style), getBlockGapStyle(block.attributes));
         // if top level element and if generated class name of wp-container-{id}
         // we need to apply styles from the parent to this block
-        if (attribs.class &&
+        if ((attribs === null || attribs === void 0 ? void 0 : attribs.class) &&
             ((_a = attribs.class) === null || _a === void 0 ? void 0 : _a.indexOf('wp-container-')) !== -1 &&
             block.parentId) {
             const parentBlock = getBlockById(options.allBlocks, block.parentId);
@@ -509,17 +518,18 @@ function createReactNodes(options) {
                 attribs.class.split(' ').find((c) => c === options.className))) {
             return React__default["default"].createElement(name, Object.assign(Object.assign({}, props), { key: uuid.v4() }), options.component);
         }
-        const reactChildren = children.map((child) => traverse(child));
+        const reactChildren = (children || []).map((child) => traverse(child));
         // Create React component based on the node type
         if (type === 'tag') {
             return React__default["default"].createElement(name, Object.assign(Object.assign({}, props), { key: uuid.v4() }), ...reactChildren);
         }
-        else if (type === 'script' || type === 'style') {
-            return React__default["default"].createElement('div', {
+        else if (type === 'style') {
+            return React__default["default"].createElement('style', {
+                scoped: !!Object.keys(node.attribs).find((s) => s === 'scoped'),
                 dangerouslySetInnerHTML: { __html: node.children[0].data },
                 key: uuid.v4(),
             });
-        }
+        } // currently ignore type === "script"
         return null; // Return null for unsupported node types
     };
     return options.html.map((el) => traverse(el));
@@ -721,7 +731,6 @@ const BlockRenderer = ({ blocks = [] }) => {
                         if (showSubmenuIcon) {
                             let newHtmlContent = `${block.htmlContent}`;
                             newHtmlContent = newHtmlContent.replace('</a>', `</a><button class="wp-block-navigation__submenu-icon wp-block-navigation-submenu__toggle" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M1.50002 4L6.00002 8L10.5 4" stroke-width="1.5"></path></svg></button>`);
-                            console.log('IN HERE: ', newHtmlContent);
                             parsedHTML = parse__default["default"](newHtmlContent || '') || [];
                         }
                         return (React__default["default"].createElement(React__default["default"].Fragment, { key: block.id }, createReactNodes({

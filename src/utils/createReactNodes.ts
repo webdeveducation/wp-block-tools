@@ -42,7 +42,7 @@ export function createReactNodes(options: {
     // if top level element and if generated class name of wp-container-{id}
     // we need to apply styles from the parent to this block
     if (
-      attribs.class &&
+      attribs?.class &&
       attribs.class?.indexOf('wp-container-') !== -1 &&
       block.parentId
     ) {
@@ -70,7 +70,7 @@ export function createReactNodes(options: {
       );
     }
 
-    const reactChildren = children.map((child: any) => traverse(child));
+    const reactChildren = (children || []).map((child: any) => traverse(child));
 
     // Create React component based on the node type
     if (type === 'tag') {
@@ -79,12 +79,13 @@ export function createReactNodes(options: {
         { ...props, key: uuid() },
         ...reactChildren
       );
-    } else if (type === 'script' || type === 'style') {
-      return React.createElement('div', {
+    } else if (type === 'style') {
+      return React.createElement('style', {
+        scoped: !!Object.keys(node.attribs).find((s) => s === 'scoped'),
         dangerouslySetInnerHTML: { __html: node.children[0].data },
         key: uuid(),
       });
-    }
+    } // currently ignore type === "script"
 
     return null; // Return null for unsupported node types
   };
