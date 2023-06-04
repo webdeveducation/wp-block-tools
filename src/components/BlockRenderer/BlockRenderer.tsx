@@ -14,7 +14,12 @@ export type BlockRendererProps = {
 };
 
 export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
-  const { renderComponent, blocks: allBlocks } = useBlockRendererContext();
+  const {
+    renderComponent,
+    blocks: allBlocks,
+    wpDomain,
+    customInternalLinkComponent,
+  } = useBlockRendererContext();
 
   const inlineStylesheets = blocks
     .filter((block) => !!block.inlineStylesheet)
@@ -69,6 +74,8 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-media-text__content',
+                    wpDomain,
+                    customInternalLinkComponent,
                   })}
                 </React.Fragment>
               );
@@ -82,6 +89,8 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-cover__inner-container',
+                    wpDomain,
+                    customInternalLinkComponent,
                   })}
                 </React.Fragment>
               );
@@ -111,6 +120,8 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-navigation__submenu-container',
+                    wpDomain,
+                    customInternalLinkComponent,
                   })}
                 </React.Fragment>
               );
@@ -132,6 +143,8 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     block,
                     allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
+                    wpDomain,
+                    customInternalLinkComponent,
                   })}
                 </React.Fragment>
               );

@@ -6,6 +6,7 @@ import { createReactNodes } from '../../../utils/createReactNodes';
 import {
   convertStyleStringToReact,
   getBlockById,
+  getCustomInternalLinkComponent,
   getLinkTextStyle,
 } from '../../../utils';
 import { hasClass } from '../../../utils/hasClass';
@@ -18,17 +19,6 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
   } = useBlockRendererContext();
 
   const parsedHTML: any[] = parse(block.htmlContent || '') || [];
-
-  const getInternalHref = (href: string) => {
-    const siteDomainWithoutProtocol = (wpDomain || '')
-      .replace('http://', '')
-      .replace('https://', '');
-
-    return href
-      .replace('http://', '')
-      .replace('https://', '')
-      .replace(siteDomainWithoutProtocol || '', '');
-  };
 
   const traverse = (els: any[]) => {
     els.forEach((el) => {
@@ -72,41 +62,17 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
           }`;
         }
 
-        // process if anchor tag and has customInternalLinkComponent
-        const href = el.attribs?.href || '';
-        const hrefWithoutProtocol = href
-          .replace('http://', '')
-          .replace('https://', '');
-        const siteDomainWithoutProtocol = (wpDomain || '')
-          .replace('http://', '')
-          .replace('https://', '');
+        const internalLinkComponent = getCustomInternalLinkComponent({
+          node: el,
+          block,
+          allBlocks,
+          customInternalLinkComponent,
+          wpDomain,
+        });
 
-        if (
-          customInternalLinkComponent &&
-          ((!!siteDomainWithoutProtocol &&
-            hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
-            hrefWithoutProtocol.indexOf('/') === 0)
-        ) {
-          const reactElement: any = createReactNodes({
-            html: [el],
-            block,
-            allBlocks,
-          });
-
-          const style = el.attribs?.style
-            ? convertStyleStringToReact(el.attribs?.style)
-            : null;
-
-          const internalLinkComponent = customInternalLinkComponent({
-            ...(el?.attribs || {}),
-            style,
-            internalHref: getInternalHref(href),
-            children: reactElement,
-          });
-          if (!!internalLinkComponent) {
-            el.type = 'react';
-            el.component = internalLinkComponent;
-          }
+        if (!!internalLinkComponent) {
+          el.type = 'react';
+          el.component = internalLinkComponent;
         }
       }
       if (el.children) {
@@ -119,7 +85,13 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
 
   return (
     <Fragment>
-      {createReactNodes({ html: parsedHTML, block, allBlocks })}
+      {createReactNodes({
+        html: parsedHTML,
+        block,
+        allBlocks,
+        wpDomain,
+        customInternalLinkComponent,
+      })}
     </Fragment>
   );
 };

@@ -21,3 +21,10 @@
 .is-nowrap.is-nowrap {
   flex-wrap: nowrap;
 }
+
+.wp-block-table thead {
+  border-bottom: 3px solid;
+}
+.wp-block-table tfoot {
+  border-top: 3px solid;
+}

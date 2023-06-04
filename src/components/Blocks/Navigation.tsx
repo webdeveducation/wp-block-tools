@@ -3,6 +3,7 @@ import { createReactNodes } from '../../utils/createReactNodes';
 import { IBlockBase } from '../../types';
 import { BlockRenderer } from '../BlockRenderer';
 import parse from 'html-dom-parser';
+import { useBlockRendererContext } from '../../context';
 
 type Props = {
   block: IBlockBase;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function Navigation({ block, allBlocks }: Props) {
+  const { wpDomain, customInternalLinkComponent } = useBlockRendererContext();
   const { htmlContent, innerBlocks } = block;
   const parsedHTML: any = parse(htmlContent || '') || [];
 
@@ -59,6 +61,8 @@ export default function Navigation({ block, allBlocks }: Props) {
         allBlocks,
         component: <BlockRenderer blocks={innerBlocks} />,
         className: 'wp-block-navigation__container',
+        wpDomain,
+        customInternalLinkComponent,
       })}
     </React.Fragment>
   );

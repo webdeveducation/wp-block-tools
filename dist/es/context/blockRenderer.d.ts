@@ -1,5 +1,5 @@
 import React from 'react';
-import { IBlockBase } from '../types';
+import { CustomInternalLinkComponent, IBlockBase } from '../types';
 export type IBlockRendererContext = {
     blocks: IBlockBase[];
     renderComponent?: (options: {
@@ -9,7 +9,7 @@ export type IBlockRendererContext = {
             [key: string]: string | number;
         };
     }) => React.ReactElement | null;
-    customInternalLinkComponent?: (el: any) => React.ReactElement | null;
+    customInternalLinkComponent?: CustomInternalLinkComponent;
     wpDomain?: string;
 };
 export declare const BlockRendererContext: React.Context<IBlockRendererContext>;

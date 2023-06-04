@@ -377,68 +377,11 @@ function convertStyleStringToReact(styleString) {
     return styles;
 }
 
-const getBlockById = (allBlocks, id) => {
-    let foundBlock = null;
-    const findBlock = (bs) => {
-        var _a;
-        for (let block of bs) {
-            if (block.id === id) {
-                foundBlock = block;
-                break;
-            }
-            else if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
-                findBlock(block.innerBlocks);
-            }
-        }
-    };
-    findBlock(allBlocks);
-    return foundBlock;
-};
-
-const getClasses = (block) => {
-    var _a, _b;
-    const htmlContentParsed = parse__default["default"](block.htmlContent || '');
-    let htmlContentClassNames = ((_b = (_a = htmlContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
-    let classNames = `${htmlContentClassNames}`;
-    if (block.attributes.align) {
-        const alignClass = `align${block.attributes.align}`;
-        if (!classNames.split(' ').find((c) => c === alignClass)) {
-            classNames = `${classNames} ${alignClass}`;
-        }
-    }
-    // remove duplicates in classNames
-    const classNamesUnique = [];
-    const classNamesSplit = classNames.split(' ').filter((c) => !!c);
-    classNamesSplit.forEach((className) => {
-        if (!classNamesUnique.find((c) => c === className)) {
-            classNamesUnique.push(className);
-        }
-    });
-    return classNamesUnique.join(' ');
-};
-
-const BlockRendererContext = React__default["default"].createContext({
-    blocks: [],
-});
-const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, wpDomain, blocks, children, }) => {
-    const blocksWithIds = assignIds(blocks);
-    return (React__default["default"].createElement(BlockRendererContext.Provider, { value: {
-            renderComponent,
-            customInternalLinkComponent,
-            wpDomain,
-            blocks: blocksWithIds,
-        } }, children ? children : React__default["default"].createElement(RootBlockRenderer, null)));
-};
-const useBlockRendererContext = () => {
-    const blockRendererContext = React.useContext(BlockRendererContext);
-    return blockRendererContext;
-};
-
 const convertAttributesToReactProps = (attribs) => {
     // Convert attributes to React props
     const props = {};
     for (const key in attribs) {
-        if (attribs.hasOwnProperty(key)) {
+        if (attribs.hasOwnProperty(key) && key !== 'onerror') {
             if (key === 'style' && typeof attribs[key] === 'string') {
                 props[key] = convertStyleStringToReact(attribs[key]);
             }
@@ -483,8 +426,26 @@ const convertAttributesToReactProps = (attribs) => {
     return props;
 };
 
+const getBlockById = (allBlocks, id) => {
+    let foundBlock = null;
+    const findBlock = (bs) => {
+        var _a;
+        for (let block of bs) {
+            if (block.id === id) {
+                foundBlock = block;
+                break;
+            }
+            else if ((_a = block.innerBlocks) === null || _a === void 0 ? void 0 : _a.length) {
+                findBlock(block.innerBlocks);
+            }
+        }
+    };
+    findBlock(allBlocks);
+    return foundBlock;
+};
+
 function createReactNodes(options) {
-    const block = options.block;
+    const { block, allBlocks, wpDomain, customInternalLinkComponent } = options;
     const traverse = (node) => {
         var _a;
         // if this is a text node, just return the text
@@ -521,6 +482,18 @@ function createReactNodes(options) {
         const reactChildren = (children || []).map((child) => traverse(child));
         // Create React component based on the node type
         if (type === 'tag') {
+            if (node.name === 'a') {
+                const internalLinkComponent = getCustomInternalLinkComponent({
+                    node,
+                    allBlocks,
+                    block,
+                    customInternalLinkComponent,
+                    wpDomain,
+                });
+                if (internalLinkComponent) {
+                    return internalLinkComponent;
+                }
+            }
             return React__default["default"].createElement(name, Object.assign(Object.assign({}, props), { key: uuid.v4() }), ...reactChildren);
         }
         else if (type === 'style') {
@@ -535,6 +508,93 @@ function createReactNodes(options) {
     return options.html.map((el) => traverse(el));
 }
 
+const getCustomInternalLinkComponent = (options) => {
+    var _a, _b, _c;
+    const { node, block, allBlocks, wpDomain, customInternalLinkComponent } = options;
+    if (wpDomain && customInternalLinkComponent) {
+        const getInternalHref = (href) => {
+            const siteDomainWithoutProtocol = (wpDomain || '')
+                .replace('http://', '')
+                .replace('https://', '');
+            return (href
+                .replace('http://', '')
+                .replace('https://', '')
+                .replace(siteDomainWithoutProtocol || '', '') || '/');
+        };
+        // process if anchor tag and has customInternalLinkComponent
+        const href = ((_a = node.attribs) === null || _a === void 0 ? void 0 : _a.href) || '';
+        const hrefWithoutProtocol = href
+            .replace('http://', '')
+            .replace('https://', '');
+        const siteDomainWithoutProtocol = (wpDomain || '')
+            .replace('http://', '')
+            .replace('https://', '');
+        if (customInternalLinkComponent &&
+            ((!!siteDomainWithoutProtocol &&
+                hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
+                hrefWithoutProtocol.indexOf('/') === 0)) {
+            const reactElement = createReactNodes({
+                html: node.children,
+                block,
+                allBlocks,
+            });
+            let className;
+            const style = ((_b = node.attribs) === null || _b === void 0 ? void 0 : _b.style)
+                ? convertStyleStringToReact((_c = node.attribs) === null || _c === void 0 ? void 0 : _c.style)
+                : null;
+            if (!(node === null || node === void 0 ? void 0 : node.attribs)) {
+                node.attribs = {};
+            }
+            else {
+                className = node.attribs.class;
+                delete node.attribs.class;
+            }
+            const internalLinkComponent = customInternalLinkComponent(Object.assign(Object.assign({}, ((node === null || node === void 0 ? void 0 : node.attribs) || {})), { style,
+                className, href: getInternalHref(href), children: reactElement, key: block.id }));
+            return internalLinkComponent;
+        }
+    }
+};
+
+const getClasses = (block) => {
+    var _a, _b;
+    const htmlContentParsed = parse__default["default"](block.htmlContent || '');
+    let htmlContentClassNames = ((_b = (_a = htmlContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
+    let classNames = `${htmlContentClassNames}`;
+    if (block.attributes.align) {
+        const alignClass = `align${block.attributes.align}`;
+        if (!classNames.split(' ').find((c) => c === alignClass)) {
+            classNames = `${classNames} ${alignClass}`;
+        }
+    }
+    // remove duplicates in classNames
+    const classNamesUnique = [];
+    const classNamesSplit = classNames.split(' ').filter((c) => !!c);
+    classNamesSplit.forEach((className) => {
+        if (!classNamesUnique.find((c) => c === className)) {
+            classNamesUnique.push(className);
+        }
+    });
+    return classNamesUnique.join(' ');
+};
+
+const BlockRendererContext = React__default["default"].createContext({
+    blocks: [],
+});
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, wpDomain, blocks, children, }) => {
+    const blocksWithIds = assignIds(blocks);
+    return (React__default["default"].createElement(BlockRendererContext.Provider, { value: {
+            renderComponent,
+            customInternalLinkComponent,
+            wpDomain,
+            blocks: blocksWithIds,
+        } }, children ? children : React__default["default"].createElement(RootBlockRenderer, null)));
+};
+const useBlockRendererContext = () => {
+    const blockRendererContext = React.useContext(BlockRendererContext);
+    return blockRendererContext;
+};
+
 const hasClass = (nd, className) => {
     var _a, _b, _c;
     return (!!((_a = nd.attribs) === null || _a === void 0 ? void 0 : _a.class) &&
@@ -544,18 +604,9 @@ const hasClass = (nd, className) => {
 const TerminalBlock = ({ block }) => {
     const { blocks: allBlocks, customInternalLinkComponent, wpDomain, } = useBlockRendererContext();
     const parsedHTML = parse__default["default"](block.htmlContent || '') || [];
-    const getInternalHref = (href) => {
-        const siteDomainWithoutProtocol = (wpDomain || '')
-            .replace('http://', '')
-            .replace('https://', '');
-        return href
-            .replace('http://', '')
-            .replace('https://', '')
-            .replace(siteDomainWithoutProtocol || '', '');
-    };
     const traverse = (els) => {
         els.forEach((el) => {
-            var _a, _b, _c, _d, _e;
+            var _a, _b;
             // process social link based on parent "core/social-links" block attributes
             if (block.name === 'core/social-link') {
                 // get parent
@@ -586,31 +637,16 @@ const TerminalBlock = ({ block }) => {
                     }
                     el.attribs.style = `color: ${linkStyles.color};${el.attribs.style || ''}`;
                 }
-                // process if anchor tag and has customInternalLinkComponent
-                const href = ((_c = el.attribs) === null || _c === void 0 ? void 0 : _c.href) || '';
-                const hrefWithoutProtocol = href
-                    .replace('http://', '')
-                    .replace('https://', '');
-                const siteDomainWithoutProtocol = (wpDomain || '')
-                    .replace('http://', '')
-                    .replace('https://', '');
-                if (customInternalLinkComponent &&
-                    ((!!siteDomainWithoutProtocol &&
-                        hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
-                        hrefWithoutProtocol.indexOf('/') === 0)) {
-                    const reactElement = createReactNodes({
-                        html: [el],
-                        block,
-                        allBlocks,
-                    });
-                    const style = ((_d = el.attribs) === null || _d === void 0 ? void 0 : _d.style)
-                        ? convertStyleStringToReact((_e = el.attribs) === null || _e === void 0 ? void 0 : _e.style)
-                        : null;
-                    const internalLinkComponent = customInternalLinkComponent(Object.assign(Object.assign({}, ((el === null || el === void 0 ? void 0 : el.attribs) || {})), { style, internalHref: getInternalHref(href), children: reactElement }));
-                    if (!!internalLinkComponent) {
-                        el.type = 'react';
-                        el.component = internalLinkComponent;
-                    }
+                const internalLinkComponent = getCustomInternalLinkComponent({
+                    node: el,
+                    block,
+                    allBlocks,
+                    customInternalLinkComponent,
+                    wpDomain,
+                });
+                if (!!internalLinkComponent) {
+                    el.type = 'react';
+                    el.component = internalLinkComponent;
                 }
             }
             if (el.children) {
@@ -619,10 +655,17 @@ const TerminalBlock = ({ block }) => {
         });
     };
     traverse(parsedHTML);
-    return (React__default["default"].createElement(React.Fragment, null, createReactNodes({ html: parsedHTML, block, allBlocks })));
+    return (React__default["default"].createElement(React.Fragment, null, createReactNodes({
+        html: parsedHTML,
+        block,
+        allBlocks,
+        wpDomain,
+        customInternalLinkComponent,
+    })));
 };
 
 function Navigation({ block, allBlocks }) {
+    const { wpDomain, customInternalLinkComponent } = useBlockRendererContext();
     const { htmlContent, innerBlocks } = block;
     const parsedHTML = parse__default["default"](htmlContent || '') || [];
     React.useEffect(() => {
@@ -664,11 +707,13 @@ function Navigation({ block, allBlocks }) {
         allBlocks,
         component: React__default["default"].createElement(BlockRenderer, { blocks: innerBlocks }),
         className: 'wp-block-navigation__container',
+        wpDomain,
+        customInternalLinkComponent,
     })));
 }
 
 const BlockRenderer = ({ blocks = [] }) => {
-    const { renderComponent, blocks: allBlocks } = useBlockRendererContext();
+    const { renderComponent, blocks: allBlocks, wpDomain, customInternalLinkComponent, } = useBlockRendererContext();
     const inlineStylesheets = blocks
         .filter((block) => !!block.inlineStylesheet)
         .map((block) => block.inlineStylesheet);
@@ -708,6 +753,8 @@ const BlockRenderer = ({ blocks = [] }) => {
                             allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-media-text__content',
+                            wpDomain,
+                            customInternalLinkComponent,
                         })));
                     }
                     case 'core/cover': {
@@ -717,6 +764,8 @@ const BlockRenderer = ({ blocks = [] }) => {
                             allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-cover__inner-container',
+                            wpDomain,
+                            customInternalLinkComponent,
                         })));
                     }
                     case 'core/navigation-submenu': {
@@ -739,6 +788,8 @@ const BlockRenderer = ({ blocks = [] }) => {
                             allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
                             className: 'wp-block-navigation__submenu-container',
+                            wpDomain,
+                            customInternalLinkComponent,
                         })));
                     }
                     case 'core/navigation': {
@@ -750,6 +801,8 @@ const BlockRenderer = ({ blocks = [] }) => {
                             block,
                             allBlocks,
                             component: React__default["default"].createElement(BlockRenderer, { blocks: block.innerBlocks }),
+                            wpDomain,
+                            customInternalLinkComponent,
                         })));
                     }
                 }
@@ -777,6 +830,7 @@ exports.getBlockGapStyleForChild = getBlockGapStyleForChild;
 exports.getBorderRadiusStyle = getBorderRadiusStyle;
 exports.getBorderStyle = getBorderStyle;
 exports.getClasses = getClasses;
+exports.getCustomInternalLinkComponent = getCustomInternalLinkComponent;
 exports.getLinkTextStyle = getLinkTextStyle;
 exports.getMarginStyle = getMarginStyle;
 exports.getMediaTextWidthStyle = getMediaTextWidthStyle;

@@ -6,7 +6,7 @@ export const convertAttributesToReactProps = (attribs: {
   // Convert attributes to React props
   const props: { [key: string]: any } = {};
   for (const key in attribs) {
-    if (attribs.hasOwnProperty(key)) {
+    if (attribs.hasOwnProperty(key) && key !== 'onerror') {
       if (key === 'style' && typeof attribs[key] === 'string') {
         props[key] = convertStyleStringToReact(attribs[key]);
       } else if (key === 'class') {

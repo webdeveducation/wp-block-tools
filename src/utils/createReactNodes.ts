@@ -2,10 +2,11 @@ import React from 'react';
 import { v4 as uuid } from 'uuid';
 import { convertStyleStringToReact } from './convertStyleStringToReact';
 import { convertAttributesToReactProps } from './convertAttributesToReactProps';
-import { IBlockBase } from '../types';
+import { CustomInternalLinkComponent, IBlockBase } from '../types';
 import { getBlockGapStyle } from './getBlockGapStyle';
 import { getBlockById } from './getBlockById';
 import { getBlockGapStyleForChild } from './getBlockGapStyleForChild';
+import { getCustomInternalLinkComponent } from './getCustomInternalLinkComponent';
 
 export function createReactNodes(options: {
   html: any[];
@@ -13,11 +14,11 @@ export function createReactNodes(options: {
   block: IBlockBase;
   component?: JSX.Element;
   className?: string;
+  customInternalLinkComponent?: CustomInternalLinkComponent;
+  wpDomain?: string;
 }) {
-  const block = options.block;
-  let elementCount: number = -1;
+  const { block, allBlocks, wpDomain, customInternalLinkComponent } = options;
   const traverse = (node: any) => {
-    elementCount++;
     // if this is a text node, just return the text
     if (node.type === 'text') {
       return node.data;
@@ -74,6 +75,18 @@ export function createReactNodes(options: {
 
     // Create React component based on the node type
     if (type === 'tag') {
+      if (node.name === 'a') {
+        const internalLinkComponent = getCustomInternalLinkComponent({
+          node,
+          allBlocks,
+          block,
+          customInternalLinkComponent,
+          wpDomain,
+        });
+        if (internalLinkComponent) {
+          return internalLinkComponent;
+        }
+      }
       return React.createElement(
         name,
         { ...props, key: uuid() },

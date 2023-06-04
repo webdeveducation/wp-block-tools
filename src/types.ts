@@ -22,3 +22,7 @@ export enum NodeType {
   Text = 'text',
   Node = 'node',
 }
+
+export type CustomInternalLinkComponent = (
+  el: any
+) => React.ReactElement | null;

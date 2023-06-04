@@ -1,3 +1,4 @@
+/// <reference types="react" />
 export interface IBlockBase {
     id?: string;
     parentId?: string;
@@ -24,3 +25,4 @@ export declare enum NodeType {
     Text = "text",
     Node = "node"
 }
+export type CustomInternalLinkComponent = (el: any) => React.ReactElement | null;
