@@ -26,3 +26,5 @@ export enum NodeType {
 export type CustomInternalLinkComponent = (
   el: any
 ) => React.ReactElement | null;
+
+export type InternalHrefReplacement = 'absolute' | 'relative' | 'none';

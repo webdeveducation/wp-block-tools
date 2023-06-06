@@ -18,6 +18,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
     renderComponent,
     blocks: allBlocks,
     wpDomain,
+    siteDomain,
     customInternalLinkComponent,
   } = useBlockRendererContext();
 
@@ -75,6 +76,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-media-text__content',
                     wpDomain,
+                    siteDomain,
                     customInternalLinkComponent,
                   })}
                 </React.Fragment>
@@ -90,6 +92,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-cover__inner-container',
                     wpDomain,
+                    siteDomain,
                     customInternalLinkComponent,
                   })}
                 </React.Fragment>
@@ -121,6 +124,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     className: 'wp-block-navigation__submenu-container',
                     wpDomain,
+                    siteDomain,
                     customInternalLinkComponent,
                   })}
                 </React.Fragment>
@@ -144,6 +148,7 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     allBlocks,
                     component: <BlockRenderer blocks={block.innerBlocks} />,
                     wpDomain,
+                    siteDomain,
                     customInternalLinkComponent,
                   })}
                 </React.Fragment>

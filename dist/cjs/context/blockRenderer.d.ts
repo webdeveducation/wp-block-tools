@@ -1,5 +1,5 @@
 import React from 'react';
-import { CustomInternalLinkComponent, IBlockBase } from '../types';
+import { CustomInternalLinkComponent, IBlockBase, InternalHrefReplacement } from '../types';
 export type IBlockRendererContext = {
     blocks: IBlockBase[];
     renderComponent?: (options: {
@@ -10,10 +10,12 @@ export type IBlockRendererContext = {
         };
     }) => React.ReactElement | null;
     customInternalLinkComponent?: CustomInternalLinkComponent;
+    internalHrefReplacement?: InternalHrefReplacement;
     wpDomain?: string;
+    siteDomain?: string;
 };
 export declare const BlockRendererContext: React.Context<IBlockRendererContext>;
-export declare const BlockRendererProvider: ({ renderComponent, customInternalLinkComponent, wpDomain, blocks, children, }: IBlockRendererContext & {
+export declare const BlockRendererProvider: ({ renderComponent, customInternalLinkComponent, wpDomain, siteDomain, internalHrefReplacement, blocks, children, }: IBlockRendererContext & {
     children?: JSX.Element | undefined;
 }) => JSX.Element;
 export declare const useBlockRendererContext: () => IBlockRendererContext;

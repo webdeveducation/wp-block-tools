@@ -1,4 +1,9 @@
-import { CustomInternalLinkComponent, IBlockBase } from '../types';
+import React from 'react';
+import {
+  CustomInternalLinkComponent,
+  IBlockBase,
+  InternalHrefReplacement,
+} from '../types';
 import { convertStyleStringToReact } from './convertStyleStringToReact';
 import { createReactNodes } from './createReactNodes';
 
@@ -7,12 +12,26 @@ export const getCustomInternalLinkComponent = (options: {
   block: IBlockBase;
   allBlocks: IBlockBase[];
   wpDomain?: string;
+  siteDomain?: string;
   customInternalLinkComponent?: CustomInternalLinkComponent;
+  internalHrefReplacement?: InternalHrefReplacement;
 }) => {
-  const { node, block, allBlocks, wpDomain, customInternalLinkComponent } =
-    options;
+  const {
+    node,
+    block,
+    allBlocks,
+    wpDomain,
+    customInternalLinkComponent,
+    internalHrefReplacement,
+    siteDomain,
+  } = options;
 
-  if (wpDomain && customInternalLinkComponent) {
+  console.log('INER HERE: ', siteDomain);
+
+  if (
+    wpDomain &&
+    (customInternalLinkComponent || internalHrefReplacement !== 'none')
+  ) {
     const getInternalHref = (href: string) => {
       const siteDomainWithoutProtocol = (wpDomain || '')
         .replace('http://', '')
@@ -35,7 +54,7 @@ export const getCustomInternalLinkComponent = (options: {
       .replace('https://', '');
 
     if (
-      customInternalLinkComponent &&
+      (customInternalLinkComponent || internalHrefReplacement !== 'none') &&
       ((!!siteDomainWithoutProtocol &&
         hrefWithoutProtocol.indexOf(siteDomainWithoutProtocol) === 0) ||
         hrefWithoutProtocol.indexOf('/') === 0)
@@ -58,15 +77,41 @@ export const getCustomInternalLinkComponent = (options: {
         delete node.attribs.class;
       }
 
-      const internalLinkComponent = customInternalLinkComponent({
-        ...(node?.attribs || {}),
-        style,
-        className,
-        href: getInternalHref(href),
-        children: reactElement,
-        key: block.id,
-      });
-      return internalLinkComponent;
+      if (!!customInternalLinkComponent) {
+        const internalLinkComponent = customInternalLinkComponent({
+          ...(node?.attribs || {}),
+          style,
+          className,
+          href: getInternalHref(href),
+          children: reactElement,
+          key: block.id,
+        });
+        return internalLinkComponent;
+      } else if (internalHrefReplacement === 'absolute' && !!siteDomain) {
+        return React.createElement(
+          'a',
+          {
+            ...(node?.attribs || {}),
+            style,
+            className,
+            href: `${siteDomain}${getInternalHref(href)}`,
+            key: block.id,
+          },
+          reactElement
+        );
+      } else if (internalHrefReplacement === 'relative') {
+        return React.createElement(
+          'a',
+          {
+            ...(node?.attribs || {}),
+            style,
+            className,
+            href: getInternalHref(href),
+            key: block.id,
+          },
+          reactElement
+        );
+      }
     }
   }
 };

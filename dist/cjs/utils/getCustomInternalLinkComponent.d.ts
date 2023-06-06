@@ -1,9 +1,11 @@
-/// <reference types="react" />
-import { CustomInternalLinkComponent, IBlockBase } from '../types';
+import React from 'react';
+import { CustomInternalLinkComponent, IBlockBase, InternalHrefReplacement } from '../types';
 export declare const getCustomInternalLinkComponent: (options: {
     node: any;
     block: IBlockBase;
     allBlocks: IBlockBase[];
     wpDomain?: string;
+    siteDomain?: string;
     customInternalLinkComponent?: CustomInternalLinkComponent;
-}) => import("react").ReactElement<any, string | import("react").JSXElementConstructor<any>> | null | undefined;
+    internalHrefReplacement?: InternalHrefReplacement;
+}) => React.ReactElement<any, string | React.JSXElementConstructor<any>> | null | undefined;

@@ -1,8 +1,11 @@
 import React from 'react';
 import { v4 as uuid } from 'uuid';
-import { convertStyleStringToReact } from './convertStyleStringToReact';
 import { convertAttributesToReactProps } from './convertAttributesToReactProps';
-import { CustomInternalLinkComponent, IBlockBase } from '../types';
+import {
+  CustomInternalLinkComponent,
+  IBlockBase,
+  InternalHrefReplacement,
+} from '../types';
 import { getBlockGapStyle } from './getBlockGapStyle';
 import { getBlockById } from './getBlockById';
 import { getBlockGapStyleForChild } from './getBlockGapStyleForChild';
@@ -15,9 +18,18 @@ export function createReactNodes(options: {
   component?: JSX.Element;
   className?: string;
   customInternalLinkComponent?: CustomInternalLinkComponent;
+  internalHrefReplacement?: InternalHrefReplacement;
   wpDomain?: string;
+  siteDomain?: string;
 }) {
-  const { block, allBlocks, wpDomain, customInternalLinkComponent } = options;
+  const {
+    block,
+    allBlocks,
+    wpDomain,
+    customInternalLinkComponent,
+    internalHrefReplacement,
+    siteDomain,
+  } = options;
   const traverse = (node: any) => {
     // if this is a text node, just return the text
     if (node.type === 'text') {
@@ -81,7 +93,9 @@ export function createReactNodes(options: {
           allBlocks,
           block,
           customInternalLinkComponent,
+          internalHrefReplacement,
           wpDomain,
+          siteDomain,
         });
         if (internalLinkComponent) {
           return internalLinkComponent;

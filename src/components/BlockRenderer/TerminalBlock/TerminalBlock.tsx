@@ -4,7 +4,6 @@ import { IBlockBase } from '../../../types';
 import parse from 'html-dom-parser';
 import { createReactNodes } from '../../../utils/createReactNodes';
 import {
-  convertStyleStringToReact,
   getBlockById,
   getCustomInternalLinkComponent,
   getLinkTextStyle,
@@ -16,6 +15,8 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
     blocks: allBlocks,
     customInternalLinkComponent,
     wpDomain,
+    internalHrefReplacement,
+    siteDomain,
   } = useBlockRendererContext();
 
   const parsedHTML: any[] = parse(block.htmlContent || '') || [];
@@ -67,7 +68,9 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
           block,
           allBlocks,
           customInternalLinkComponent,
+          internalHrefReplacement,
           wpDomain,
+          siteDomain,
         });
 
         if (!!internalLinkComponent) {
@@ -90,7 +93,9 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
         block,
         allBlocks,
         wpDomain,
+        siteDomain,
         customInternalLinkComponent,
+        internalHrefReplacement,
       })}
     </Fragment>
   );

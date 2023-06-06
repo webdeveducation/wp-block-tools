@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import { CustomInternalLinkComponent, IBlockBase } from '../types';
+import { CustomInternalLinkComponent, IBlockBase, InternalHrefReplacement } from '../types';
 export declare function createReactNodes(options: {
     html: any[];
     allBlocks: IBlockBase[];
@@ -7,5 +7,7 @@ export declare function createReactNodes(options: {
     component?: JSX.Element;
     className?: string;
     customInternalLinkComponent?: CustomInternalLinkComponent;
+    internalHrefReplacement?: InternalHrefReplacement;
     wpDomain?: string;
+    siteDomain?: string;
 }): any[];

@@ -11,7 +11,12 @@ type Props = {
 };
 
 export default function Navigation({ block, allBlocks }: Props) {
-  const { wpDomain, customInternalLinkComponent } = useBlockRendererContext();
+  const {
+    wpDomain,
+    customInternalLinkComponent,
+    internalHrefReplacement,
+    siteDomain,
+  } = useBlockRendererContext();
   const { htmlContent, innerBlocks } = block;
   const parsedHTML: any = parse(htmlContent || '') || [];
 
@@ -62,7 +67,9 @@ export default function Navigation({ block, allBlocks }: Props) {
         component: <BlockRenderer blocks={innerBlocks} />,
         className: 'wp-block-navigation__container',
         wpDomain,
+        siteDomain,
         customInternalLinkComponent,
+        internalHrefReplacement,
       })}
     </React.Fragment>
   );
