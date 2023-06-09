@@ -14,6 +14,7 @@ export * from './getLinkTextStyle';
 export * from './getBlockGapStyle';
 export * from './getBlockGapStyleForChild';
 export * from './getCustomInternalLinkComponent';
+export * from './getLayoutStyles';
 export * from './convertStyleStringToReact';
 export * from './getBlockById';
 export * from './getClasses';

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { createReactNodes } from '../../utils/createReactNodes';
 import { IBlockBase } from '../../types';
 import { BlockRenderer } from '../BlockRenderer';

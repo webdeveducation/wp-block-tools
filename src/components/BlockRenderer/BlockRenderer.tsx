@@ -8,6 +8,7 @@ import { createReactNodes } from '../../utils/createReactNodes';
 import parse from 'html-dom-parser';
 import Navigation from '../Blocks/Navigation';
 import { getBlockById, getClasses, getStyles } from '../../utils';
+import Query from '../Blocks/Query';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
@@ -128,6 +129,11 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
                     customInternalLinkComponent,
                   })}
                 </React.Fragment>
+              );
+            }
+            case 'core/query': {
+              return (
+                <Query key={block.id} block={block} allBlocks={allBlocks} />
               );
             }
             case 'core/navigation': {

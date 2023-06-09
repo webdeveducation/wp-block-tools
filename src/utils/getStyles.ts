@@ -9,6 +9,7 @@ import { getMediaTextWidthStyle } from './getMediaTextWidthStyle';
 import { getPaddingStyle } from './getPaddingStyle';
 import { getTextStyle } from './getTextStyle';
 import { getTypographyStyle } from './getTypographyStyle';
+import { getLayoutStyles } from './getLayoutStyles';
 
 export const getStyles = (block: IBlockBase) => {
   const inlineStyles: { [key: string]: string } = {};
@@ -36,5 +37,6 @@ export const getStyles = (block: IBlockBase) => {
     ...getTextStyle(attributes),
     ...getBackgroundStyle(attributes),
     ...getMediaTextWidthStyle(attributes),
+    ...getLayoutStyles(attributes),
   };
 };

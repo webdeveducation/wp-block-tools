@@ -26,8 +26,6 @@ export const getCustomInternalLinkComponent = (options: {
     siteDomain,
   } = options;
 
-  console.log('INER HERE: ', siteDomain);
-
   if (
     wpDomain &&
     (customInternalLinkComponent || internalHrefReplacement !== 'none')

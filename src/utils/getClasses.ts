@@ -11,6 +11,9 @@ export const getClasses = (block: IBlockBase) => {
       classNames = `${classNames} ${alignClass}`;
     }
   }
+  if (block.attributes?.layout?.type === 'flex') {
+    classNames = `${classNames} is-layout-flex`;
+  }
   // remove duplicates in classNames
   const classNamesUnique: string[] = [];
   const classNamesSplit = classNames.split(' ').filter((c) => !!c);

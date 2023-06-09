@@ -9,6 +9,7 @@ import { assignIds } from '../utils';
 
 export type IBlockRendererContext = {
   blocks: IBlockBase[];
+  postId: number;
   renderComponent?: (options: {
     block: IBlockBase;
     classNames?: string;
@@ -22,6 +23,7 @@ export type IBlockRendererContext = {
 
 export const BlockRendererContext = React.createContext<IBlockRendererContext>({
   blocks: [],
+  postId: 0,
 });
 export const BlockRendererProvider = ({
   renderComponent,
@@ -31,6 +33,7 @@ export const BlockRendererProvider = ({
   internalHrefReplacement = 'relative',
   blocks,
   children,
+  postId,
 }: IBlockRendererContext & { children?: JSX.Element }) => {
   const blocksWithIds = assignIds(blocks);
   if (internalHrefReplacement === 'absolute' && !siteDomain) {
@@ -41,6 +44,7 @@ export const BlockRendererProvider = ({
   return (
     <BlockRendererContext.Provider
       value={{
+        postId,
         renderComponent,
         customInternalLinkComponent,
         internalHrefReplacement,

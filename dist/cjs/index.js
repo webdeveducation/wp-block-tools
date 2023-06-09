@@ -141,7 +141,9 @@ const getBackgroundStyle = (attributes) => {
 
 const getMediaTextWidthStyle = (attributes) => {
     const mediaTextWidthStyles = {};
-    if (attributes.mediaWidth !== null && attributes.mediaWidth !== 'undefined') {
+    if (attributes.mediaWidth !== null &&
+        attributes.mediaWidth !== 'undefined' &&
+        attributes.mediaWidth !== undefined) {
         if (attributes.mediaPosition === 'right') {
             mediaTextWidthStyles.gridTemplateColumns = `auto ${attributes.mediaWidth}%`;
         }
@@ -194,6 +196,18 @@ const getTypographyStyle = (attributes) => {
     return typographyStyle;
 };
 
+const getLayoutStyles = (attributes) => {
+    var _a, _b;
+    const layoutStyle = {};
+    if ((_a = attributes === null || attributes === void 0 ? void 0 : attributes.layout) === null || _a === void 0 ? void 0 : _a.type) {
+        layoutStyle.display = parseValue(attributes.layout.type);
+    }
+    if ((_b = attributes === null || attributes === void 0 ? void 0 : attributes.layout) === null || _b === void 0 ? void 0 : _b.justifyContent) {
+        layoutStyle.justifyContent = parseValue(attributes.layout.justifyContent);
+    }
+    return layoutStyle;
+};
+
 const getStyles = (block) => {
     var _a, _b;
     const inlineStyles = {};
@@ -209,7 +223,7 @@ const getStyles = (block) => {
         }
     });
     const { attributes } = block;
-    return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, inlineStyles), getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes)), getMediaTextWidthStyle(attributes));
+    return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, inlineStyles), getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes)), getMediaTextWidthStyle(attributes)), getLayoutStyles(attributes));
 };
 
 /******************************************************************************
@@ -513,7 +527,6 @@ function createReactNodes(options) {
 const getCustomInternalLinkComponent = (options) => {
     var _a, _b, _c;
     const { node, block, allBlocks, wpDomain, customInternalLinkComponent, internalHrefReplacement, siteDomain, } = options;
-    console.log('INER HERE: ', siteDomain);
     if (wpDomain &&
         (customInternalLinkComponent || internalHrefReplacement !== 'none')) {
         const getInternalHref = (href) => {
@@ -571,7 +584,7 @@ const getCustomInternalLinkComponent = (options) => {
 };
 
 const getClasses = (block) => {
-    var _a, _b;
+    var _a, _b, _c, _d;
     const htmlContentParsed = parse__default["default"](block.htmlContent || '');
     let htmlContentClassNames = ((_b = (_a = htmlContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
     let classNames = `${htmlContentClassNames}`;
@@ -580,6 +593,9 @@ const getClasses = (block) => {
         if (!classNames.split(' ').find((c) => c === alignClass)) {
             classNames = `${classNames} ${alignClass}`;
         }
+    }
+    if (((_d = (_c = block.attributes) === null || _c === void 0 ? void 0 : _c.layout) === null || _d === void 0 ? void 0 : _d.type) === 'flex') {
+        classNames = `${classNames} is-layout-flex`;
     }
     // remove duplicates in classNames
     const classNamesUnique = [];
@@ -594,13 +610,15 @@ const getClasses = (block) => {
 
 const BlockRendererContext = React__default["default"].createContext({
     blocks: [],
+    postId: 0,
 });
-const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, wpDomain, siteDomain, internalHrefReplacement = 'relative', blocks, children, }) => {
+const BlockRendererProvider = ({ renderComponent, customInternalLinkComponent, wpDomain, siteDomain, internalHrefReplacement = 'relative', blocks, children, postId, }) => {
     const blocksWithIds = assignIds(blocks);
     if (internalHrefReplacement === 'absolute' && !siteDomain) {
         console.warn('`siteDomain` must be specified when internalHrefReplacement="absolute"');
     }
     return (React__default["default"].createElement(BlockRendererContext.Provider, { value: {
+            postId,
             renderComponent,
             customInternalLinkComponent,
             internalHrefReplacement,
@@ -737,6 +755,68 @@ function Navigation({ block, allBlocks }) {
     })));
 }
 
+function Query({ block, allBlocks }) {
+    const { wpDomain, customInternalLinkComponent, internalHrefReplacement, siteDomain, postId, } = useBlockRendererContext();
+    const { htmlContent, innerBlocks } = block;
+    const parsedHTML = parse__default["default"](htmlContent || '') || [];
+    const [results, setResults] = React.useState((innerBlocks === null || innerBlocks === void 0 ? void 0 : innerBlocks.filter((innerBlock) => innerBlock.name !== 'core/query-pagination')) || []);
+    React.useEffect(() => {
+        const searchParams = new URLSearchParams(document.location.search);
+        console.log({ searchParams });
+    }, []);
+    const paginationBlocks = (innerBlocks === null || innerBlocks === void 0 ? void 0 : innerBlocks.filter((innerBlock) => innerBlock.name === 'core/query-pagination')) || [];
+    return (React__default["default"].createElement(React__default["default"].Fragment, null,
+        createReactNodes({
+            html: parsedHTML,
+            block,
+            allBlocks,
+            component: React__default["default"].createElement(BlockRenderer, { blocks: results }),
+            wpDomain,
+            siteDomain,
+            customInternalLinkComponent,
+            internalHrefReplacement,
+        }),
+        paginationBlocks.map((paginationBlock) => {
+            var _a;
+            return (React__default["default"].createElement("nav", { key: paginationBlock.id, className: `${getClasses(paginationBlock)} wp-block-query-pagination`, style: getStyles(paginationBlock) }, (_a = paginationBlock.innerBlocks) === null || _a === void 0 ? void 0 : _a.map((innerBlock) => {
+                switch (innerBlock.name) {
+                    case 'core/query-pagination-numbers': {
+                        console.log(innerBlock);
+                        return (React__default["default"].createElement("div", { key: innerBlock.id, className: "wp-block-query-pagination-numbers" }, Array.from({
+                            length: innerBlock.attributes.totalPages,
+                        }).map((_, i) => {
+                            return (React__default["default"].createElement("a", { className: "page-numbers", key: i, style: { padding: '0 2px' }, href: `?query-${innerBlock.attributes.queryId}-page=${i + 1}`, onClick: (e) => __awaiter(this, void 0, void 0, function* () {
+                                    e.preventDefault();
+                                    window.history.pushState({ path: e.target.href }, '', e.target.href);
+                                    // load here
+                                    const response = yield fetch(`${wpDomain}/graphql`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'content-type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            query: `
+                                  query CoreQuery {
+                                    coreQuery(page: ${i + 1}, postId: ${postId}, queryId: ${innerBlock.attributes.queryId})
+                                  }
+                                `,
+                                        }),
+                                    });
+                                    const json = yield response.json();
+                                    console.log({ json });
+                                    // assign ids to new blocks
+                                    const newBlocks = assignIds(json.data.coreQuery);
+                                    setResults(newBlocks);
+                                }) }, i + 1));
+                        })));
+                    }
+                    default:
+                        return null;
+                }
+            })));
+        })));
+}
+
 const BlockRenderer = ({ blocks = [] }) => {
     const { renderComponent, blocks: allBlocks, wpDomain, siteDomain, customInternalLinkComponent, } = useBlockRendererContext();
     const inlineStylesheets = blocks
@@ -820,6 +900,9 @@ const BlockRenderer = ({ blocks = [] }) => {
                             customInternalLinkComponent,
                         })));
                     }
+                    case 'core/query': {
+                        return (React__default["default"].createElement(Query, { key: block.id, block: block, allBlocks: allBlocks }));
+                    }
                     case 'core/navigation': {
                         return (React__default["default"].createElement(Navigation, { key: block.id, block: block, allBlocks: allBlocks }));
                     }
@@ -860,6 +943,7 @@ exports.getBorderRadiusStyle = getBorderRadiusStyle;
 exports.getBorderStyle = getBorderStyle;
 exports.getClasses = getClasses;
 exports.getCustomInternalLinkComponent = getCustomInternalLinkComponent;
+exports.getLayoutStyles = getLayoutStyles;
 exports.getLinkTextStyle = getLinkTextStyle;
 exports.getMarginStyle = getMarginStyle;
 exports.getMediaTextWidthStyle = getMediaTextWidthStyle;
