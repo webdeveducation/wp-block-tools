@@ -203,6 +203,16 @@ export default function Query({ block, allBlocks }: Props) {
                     ) : null;
                   }
                   case 'core/query-pagination-numbers': {
+                    let ellipsesAtStart = false;
+                    let ellipsesAtEnd = false;
+                    if (innerBlock.attributes.totalPages > 7) {
+                      if (currentPage > 4) {
+                        ellipsesAtStart = true;
+                      }
+                      if (currentPage < innerBlock.attributes.totalPages - 3) {
+                        ellipsesAtEnd = true;
+                      }
+                    }
                     return (
                       <div
                         key={innerBlock.id}
@@ -242,15 +252,25 @@ export default function Query({ block, allBlocks }: Props) {
                                 {pNum}
                               </span>
                             ) : (
-                              <PaginationPageNumber
-                                key={i}
-                                pageNumber={pNum}
-                                queryId={innerBlock.attributes.queryId}
-                                onClick={handlePageClick}
-                                style={getLinkTextStyle(
-                                  topInnerBlock.attributes
+                              <React.Fragment key={i}>
+                                {pNum === innerBlock.attributes.totalPages &&
+                                  ellipsesAtEnd && (
+                                    <span className="page-numbers dots">
+                                      ...
+                                    </span>
+                                  )}
+                                <PaginationPageNumber
+                                  pageNumber={pNum}
+                                  queryId={innerBlock.attributes.queryId}
+                                  onClick={handlePageClick}
+                                  style={getLinkTextStyle(
+                                    topInnerBlock.attributes
+                                  )}
+                                />
+                                {pNum === 1 && ellipsesAtStart && (
+                                  <span className="page-numbers dots">...</span>
                                 )}
-                              />
+                              </React.Fragment>
                             );
                           }
                           return null;

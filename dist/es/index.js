@@ -871,6 +871,16 @@ function Query({ block, allBlocks }) {
                             paginationArrow === 'arrow' ? (React.createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-arrow" }, "\u2192")) : paginationArrow === 'chevron' ? (React.createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-chevron" }, "\u00BB")) : (''))) : null;
                     }
                     case 'core/query-pagination-numbers': {
+                        let ellipsesAtStart = false;
+                        let ellipsesAtEnd = false;
+                        if (innerBlock.attributes.totalPages > 7) {
+                            if (currentPage > 4) {
+                                ellipsesAtStart = true;
+                            }
+                            if (currentPage < innerBlock.attributes.totalPages - 3) {
+                                ellipsesAtEnd = true;
+                            }
+                        }
                         return (React.createElement("div", { key: innerBlock.id, className: "wp-block-query-pagination-numbers" }, Array.from({
                             length: innerBlock.attributes.totalPages,
                         }).map((_, i) => {
@@ -895,7 +905,11 @@ function Query({ block, allBlocks }) {
                                 canReturn = true;
                             }
                             if (canReturn) {
-                                return currentPage === pNum ? (React.createElement("span", { key: i, "aria-current": "page", className: "page-numbers current" }, pNum)) : (React.createElement(PaginationPageNumber, { key: i, pageNumber: pNum, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }));
+                                return currentPage === pNum ? (React.createElement("span", { key: i, "aria-current": "page", className: "page-numbers current" }, pNum)) : (React.createElement(React.Fragment, { key: i },
+                                    pNum === innerBlock.attributes.totalPages &&
+                                        ellipsesAtEnd && (React.createElement("span", { className: "page-numbers dots" }, "...")),
+                                    React.createElement(PaginationPageNumber, { pageNumber: pNum, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }),
+                                    pNum === 1 && ellipsesAtStart && (React.createElement("span", { className: "page-numbers dots" }, "..."))));
                             }
                             return null;
                         })));
