@@ -4,7 +4,14 @@ import { IBlockBase } from '../../types';
 import { BlockRenderer } from '../BlockRenderer';
 import parse from 'html-dom-parser';
 import { useBlockRendererContext } from '../../context';
-import { assignIds, getClasses, getStyles } from '../../utils';
+import {
+  assignIds,
+  getBlockById,
+  getClasses,
+  getLinkTextStyle,
+  getStyles,
+} from '../../utils';
+import PaginationPageNumber from './PaginationPageNumber';
 
 type Props = {
   block: IBlockBase;
@@ -19,7 +26,10 @@ export default function Query({ block, allBlocks }: Props) {
     siteDomain,
     postId,
   } = useBlockRendererContext();
+
+  const [currentPage, setCurrentPage] = useState('1');
   const { htmlContent, innerBlocks } = block;
+  const queryId = block?.attributes?.queryId;
   const parsedHTML: any = parse(htmlContent || '') || [];
 
   const [results, setResults] = useState(
@@ -28,105 +38,194 @@ export default function Query({ block, allBlocks }: Props) {
     ) || []
   );
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(document.location.search);
-    console.log({ searchParams });
-  }, []);
+  const handlePageClick = (loadPageNum: number) => {
+    loadPage(loadPageNum);
+  };
 
-  const paginationBlocks =
-    innerBlocks?.filter(
-      (innerBlock) => innerBlock.name === 'core/query-pagination'
-    ) || [];
+  useEffect(() => {
+    if (queryId) {
+      const search = new URLSearchParams(window.location.search);
+      const pageNumber = search.get(`query-${queryId}-page`) || '1';
+      setCurrentPage(pageNumber);
+      if (pageNumber && parseInt(pageNumber) > 1) {
+        setResults([]);
+        const fetchResults = async () => {
+          const response = await fetch(
+            `${wpDomain}/graphql?query=${`
+            query CoreQuery {
+              coreQuery(page: ${pageNumber}, postId: ${postId}, queryId: ${queryId})
+            }
+          `}`,
+            {
+              method: 'GET',
+              headers: {
+                'content-type': 'application/json',
+              },
+            }
+          );
+          const json = await response.json();
+          // assign ids to new blocks
+          const newBlocks = assignIds(json.data.coreQuery);
+          setResults(newBlocks);
+        };
+        fetchResults();
+      }
+    }
+  }, [queryId]);
+
+  console.log('inner blocks: ', block.innerBlocks);
+
+  const loadPage = async (loadPageNum: number) => {
+    if (queryId) {
+      const response = await fetch(
+        `${wpDomain}/graphql?query=${`
+      query CoreQuery {
+        coreQuery(page: ${loadPageNum}, postId: ${postId}, queryId: ${queryId})
+      }
+    `}`,
+        {
+          method: 'GET',
+          headers: {
+            'content-type': 'application/json',
+          },
+        }
+      );
+      const json = await response.json();
+      // assign ids to new blocks
+      const newBlocks = assignIds(json.data.coreQuery);
+      setResults(newBlocks);
+    }
+  };
 
   return (
     <React.Fragment>
-      {createReactNodes({
-        html: parsedHTML,
-        block,
-        allBlocks,
-        component: <BlockRenderer blocks={results} />,
-        wpDomain,
-        siteDomain,
-        customInternalLinkComponent,
-        internalHrefReplacement,
-      })}
-      {paginationBlocks.map((paginationBlock) => {
-        return (
-          <nav
-            key={paginationBlock.id}
-            className={`${getClasses(
-              paginationBlock
-            )} wp-block-query-pagination`}
-            style={getStyles(paginationBlock)}
-          >
-            {paginationBlock.innerBlocks?.map((innerBlock) => {
-              switch (innerBlock.name) {
-                case 'core/query-pagination-numbers': {
-                  console.log(innerBlock);
-                  return (
-                    <div
-                      key={innerBlock.id}
-                      className="wp-block-query-pagination-numbers"
-                    >
-                      {Array.from({
-                        length: innerBlock.attributes.totalPages,
-                      }).map((_, i) => {
-                        return (
-                          <a
-                            className="page-numbers"
-                            key={i}
-                            style={{ padding: '0 2px' }}
-                            href={`?query-${
-                              innerBlock.attributes.queryId
-                            }-page=${i + 1}`}
-                            onClick={async (e: any) => {
-                              e.preventDefault();
-                              window.history.pushState(
-                                { path: e.target.href },
-                                '',
-                                e.target.href
-                              );
-                              // load here
-                              const response = await fetch(
-                                `${wpDomain}/graphql`,
-                                {
-                                  method: 'POST',
-                                  headers: {
-                                    'content-type': 'application/json',
-                                  },
-                                  body: JSON.stringify({
-                                    query: `
-                                  query CoreQuery {
-                                    coreQuery(page: ${
-                                      i + 1
-                                    }, postId: ${postId}, queryId: ${
-                                      innerBlock.attributes.queryId
-                                    })
-                                  }
-                                `,
-                                  }),
-                                }
-                              );
-                              const json = await response.json();
-                              console.log({ json });
-                              // assign ids to new blocks
-                              const newBlocks = assignIds(json.data.coreQuery);
-                              setResults(newBlocks);
-                            }}
-                          >
-                            {i + 1}
-                          </a>
-                        );
-                      })}
-                    </div>
-                  );
+      {(innerBlocks || []).map((topInnerBlock) => {
+        if (topInnerBlock.name === 'wp-block-tools/loop') {
+          return createReactNodes({
+            html: parsedHTML,
+            block,
+            allBlocks,
+            component: <BlockRenderer blocks={results} />,
+            wpDomain,
+            siteDomain,
+            customInternalLinkComponent,
+            internalHrefReplacement,
+          });
+        } else if (topInnerBlock.name === 'core/query-pagination') {
+          return (
+            <nav
+              key={topInnerBlock.id}
+              className={`${getClasses(
+                topInnerBlock
+              )} wp-block-query-pagination`}
+              style={getStyles(topInnerBlock)}
+            >
+              {topInnerBlock.innerBlocks?.map((innerBlock) => {
+                const paginationArrow =
+                  topInnerBlock.attributes?.paginationArrow;
+                switch (innerBlock.name) {
+                  case 'core/query-pagination-previous': {
+                    return (
+                      <a
+                        key={innerBlock.id}
+                        href={`?query-${queryId}-page=${
+                          parseInt(currentPage) - 1
+                        }`}
+                        style={getLinkTextStyle(topInnerBlock.attributes)}
+                        className="wp-block-query-pagination-previous"
+                        onClick={(e: any) => {
+                          e.preventDefault();
+                          window.history.pushState(
+                            { path: e.target.href },
+                            '',
+                            e.target.href
+                          );
+                          // load here
+                          setCurrentPage(`${parseInt(currentPage) - 1}`);
+                          loadPage(parseInt(currentPage) - 1);
+                        }}
+                      >
+                        {paginationArrow === 'arrow' ? (
+                          <span className="wp-block-query-pagination-previous-arrow is-arrow-arrow">
+                            ←
+                          </span>
+                        ) : paginationArrow === 'chevron' ? (
+                          <span className="wp-block-query-pagination-previous-arrow is-arrow-chevron">
+                            «
+                          </span>
+                        ) : (
+                          ''
+                        )}{' '}
+                        Previous Page
+                      </a>
+                    );
+                  }
+                  case 'core/query-pagination-next': {
+                    return (
+                      <a
+                        key={innerBlock.id}
+                        href={`?query-${queryId}-page=${
+                          parseInt(currentPage) + 1
+                        }`}
+                        className="wp-block-query-pagination-next"
+                        style={getLinkTextStyle(topInnerBlock.attributes)}
+                        onClick={(e: any) => {
+                          e.preventDefault();
+                          window.history.pushState(
+                            { path: e.target.href },
+                            '',
+                            e.target.href
+                          );
+                          // load here
+                          setCurrentPage(`${parseInt(currentPage) + 1}`);
+                          loadPage(parseInt(currentPage) + 1);
+                        }}
+                      >
+                        Next Page{' '}
+                        {paginationArrow === 'arrow' ? (
+                          <span className="wp-block-query-pagination-next-arrow is-arrow-arrow">
+                            →
+                          </span>
+                        ) : paginationArrow === 'chevron' ? (
+                          <span className="wp-block-query-pagination-next-arrow is-arrow-chevron">
+                            »
+                          </span>
+                        ) : (
+                          ''
+                        )}
+                      </a>
+                    );
+                  }
+                  case 'core/query-pagination-numbers': {
+                    return (
+                      <div
+                        key={innerBlock.id}
+                        className="wp-block-query-pagination-numbers"
+                      >
+                        {Array.from({
+                          length: innerBlock.attributes.totalPages,
+                        }).map((_, i) => {
+                          return (
+                            <PaginationPageNumber
+                              key={i}
+                              pageNumber={i + 1}
+                              queryId={innerBlock.attributes.queryId}
+                              onClick={handlePageClick}
+                              style={getLinkTextStyle(topInnerBlock.attributes)}
+                            />
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                  default:
+                    return null;
                 }
-                default:
-                  return null;
-              }
-            })}
-          </nav>
-        );
+              })}
+            </nav>
+          );
+        }
+        return null;
       })}
     </React.Fragment>
   );

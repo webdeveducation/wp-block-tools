@@ -755,66 +755,130 @@ function Navigation({ block, allBlocks }) {
     })));
 }
 
+function PaginationPageNumber({ pageNumber, queryId, onClick, style, }) {
+    const handleClick = (e) => __awaiter(this, void 0, void 0, function* () {
+        e.preventDefault();
+        window.history.pushState({ path: e.target.href }, '', e.target.href);
+        // load here
+        onClick(pageNumber);
+    });
+    return (React__default["default"].createElement("a", { className: "page-numbers", style: Object.assign({ padding: '0 2px' }, (style || {})), href: `?query-${queryId}-page=${pageNumber}`, onClick: handleClick }, pageNumber));
+}
+
 function Query({ block, allBlocks }) {
+    var _a;
     const { wpDomain, customInternalLinkComponent, internalHrefReplacement, siteDomain, postId, } = useBlockRendererContext();
+    const [currentPage, setCurrentPage] = React.useState('1');
     const { htmlContent, innerBlocks } = block;
+    const queryId = (_a = block === null || block === void 0 ? void 0 : block.attributes) === null || _a === void 0 ? void 0 : _a.queryId;
     const parsedHTML = parse__default["default"](htmlContent || '') || [];
     const [results, setResults] = React.useState((innerBlocks === null || innerBlocks === void 0 ? void 0 : innerBlocks.filter((innerBlock) => innerBlock.name !== 'core/query-pagination')) || []);
+    const handlePageClick = (loadPageNum) => {
+        loadPage(loadPageNum);
+    };
     React.useEffect(() => {
-        const searchParams = new URLSearchParams(document.location.search);
-        console.log({ searchParams });
-    }, []);
-    const paginationBlocks = (innerBlocks === null || innerBlocks === void 0 ? void 0 : innerBlocks.filter((innerBlock) => innerBlock.name === 'core/query-pagination')) || [];
-    return (React__default["default"].createElement(React__default["default"].Fragment, null,
-        createReactNodes({
-            html: parsedHTML,
-            block,
-            allBlocks,
-            component: React__default["default"].createElement(BlockRenderer, { blocks: results }),
-            wpDomain,
-            siteDomain,
-            customInternalLinkComponent,
-            internalHrefReplacement,
-        }),
-        paginationBlocks.map((paginationBlock) => {
-            var _a;
-            return (React__default["default"].createElement("nav", { key: paginationBlock.id, className: `${getClasses(paginationBlock)} wp-block-query-pagination`, style: getStyles(paginationBlock) }, (_a = paginationBlock.innerBlocks) === null || _a === void 0 ? void 0 : _a.map((innerBlock) => {
+        if (queryId) {
+            const search = new URLSearchParams(window.location.search);
+            const pageNumber = search.get(`query-${queryId}-page`) || '1';
+            setCurrentPage(pageNumber);
+            if (pageNumber && parseInt(pageNumber) > 1) {
+                setResults([]);
+                const fetchResults = () => __awaiter(this, void 0, void 0, function* () {
+                    const response = yield fetch(`${wpDomain}/graphql?query=${`
+            query CoreQuery {
+              coreQuery(page: ${pageNumber}, postId: ${postId}, queryId: ${queryId})
+            }
+          `}`, {
+                        method: 'GET',
+                        headers: {
+                            'content-type': 'application/json',
+                        },
+                    });
+                    const json = yield response.json();
+                    // assign ids to new blocks
+                    const newBlocks = assignIds(json.data.coreQuery);
+                    setResults(newBlocks);
+                });
+                fetchResults();
+            }
+        }
+    }, [queryId]);
+    console.log('inner blocks: ', block.innerBlocks);
+    const loadPage = (loadPageNum) => __awaiter(this, void 0, void 0, function* () {
+        if (queryId) {
+            const response = yield fetch(`${wpDomain}/graphql?query=${`
+      query CoreQuery {
+        coreQuery(page: ${loadPageNum}, postId: ${postId}, queryId: ${queryId})
+      }
+    `}`, {
+                method: 'GET',
+                headers: {
+                    'content-type': 'application/json',
+                },
+            });
+            const json = yield response.json();
+            // assign ids to new blocks
+            const newBlocks = assignIds(json.data.coreQuery);
+            setResults(newBlocks);
+        }
+    });
+    return (React__default["default"].createElement(React__default["default"].Fragment, null, (innerBlocks || []).map((topInnerBlock) => {
+        var _a;
+        if (topInnerBlock.name === 'wp-block-tools/loop') {
+            return createReactNodes({
+                html: parsedHTML,
+                block,
+                allBlocks,
+                component: React__default["default"].createElement(BlockRenderer, { blocks: results }),
+                wpDomain,
+                siteDomain,
+                customInternalLinkComponent,
+                internalHrefReplacement,
+            });
+        }
+        else if (topInnerBlock.name === 'core/query-pagination') {
+            return (React__default["default"].createElement("nav", { key: topInnerBlock.id, className: `${getClasses(topInnerBlock)} wp-block-query-pagination`, style: getStyles(topInnerBlock) }, (_a = topInnerBlock.innerBlocks) === null || _a === void 0 ? void 0 : _a.map((innerBlock) => {
+                var _a;
+                const paginationArrow = (_a = topInnerBlock.attributes) === null || _a === void 0 ? void 0 : _a.paginationArrow;
                 switch (innerBlock.name) {
+                    case 'core/query-pagination-previous': {
+                        return (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${parseInt(currentPage) - 1}`, style: getLinkTextStyle(topInnerBlock.attributes), className: "wp-block-query-pagination-previous", onClick: (e) => {
+                                e.preventDefault();
+                                window.history.pushState({ path: e.target.href }, '', e.target.href);
+                                // load here
+                                setCurrentPage(`${parseInt(currentPage) - 1}`);
+                                loadPage(parseInt(currentPage) - 1);
+                            } },
+                            paginationArrow === 'arrow' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-previous-arrow is-arrow-arrow" }, "\u2190")) : paginationArrow === 'chevron' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-previous-arrow is-arrow-chevron" }, "\u00AB")) : (''),
+                            ' ',
+                            "Previous Page"));
+                    }
+                    case 'core/query-pagination-next': {
+                        return (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${parseInt(currentPage) + 1}`, className: "wp-block-query-pagination-next", style: getLinkTextStyle(topInnerBlock.attributes), onClick: (e) => {
+                                e.preventDefault();
+                                window.history.pushState({ path: e.target.href }, '', e.target.href);
+                                // load here
+                                setCurrentPage(`${parseInt(currentPage) + 1}`);
+                                loadPage(parseInt(currentPage) + 1);
+                            } },
+                            "Next Page",
+                            ' ',
+                            paginationArrow === 'arrow' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-arrow" }, "\u2192")) : paginationArrow === 'chevron' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-chevron" }, "\u00BB")) : ('')));
+                    }
                     case 'core/query-pagination-numbers': {
-                        console.log(innerBlock);
                         return (React__default["default"].createElement("div", { key: innerBlock.id, className: "wp-block-query-pagination-numbers" }, Array.from({
                             length: innerBlock.attributes.totalPages,
                         }).map((_, i) => {
-                            return (React__default["default"].createElement("a", { className: "page-numbers", key: i, style: { padding: '0 2px' }, href: `?query-${innerBlock.attributes.queryId}-page=${i + 1}`, onClick: (e) => __awaiter(this, void 0, void 0, function* () {
-                                    e.preventDefault();
-                                    window.history.pushState({ path: e.target.href }, '', e.target.href);
-                                    // load here
-                                    const response = yield fetch(`${wpDomain}/graphql`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'content-type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                            query: `
-                                  query CoreQuery {
-                                    coreQuery(page: ${i + 1}, postId: ${postId}, queryId: ${innerBlock.attributes.queryId})
-                                  }
-                                `,
-                                        }),
-                                    });
-                                    const json = yield response.json();
-                                    console.log({ json });
-                                    // assign ids to new blocks
-                                    const newBlocks = assignIds(json.data.coreQuery);
-                                    setResults(newBlocks);
-                                }) }, i + 1));
+                            return (React__default["default"].createElement(PaginationPageNumber, { key: i, pageNumber: i + 1, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }));
                         })));
                     }
                     default:
                         return null;
                 }
             })));
-        })));
+        }
+        return null;
+    })));
 }
 
 const BlockRenderer = ({ blocks = [] }) => {
