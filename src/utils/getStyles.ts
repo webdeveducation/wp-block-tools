@@ -27,6 +27,10 @@ export const getStyles = (block: IBlockBase) => {
 
   const { attributes } = block;
 
+  if (!attributes) {
+    return null;
+  }
+
   return {
     ...inlineStyles,
     ...getBorderRadiusStyle(attributes),

@@ -5,7 +5,7 @@ export const getClasses = (block: IBlockBase) => {
   const htmlContentParsed: any = parse(block.htmlContent || '');
   let htmlContentClassNames = htmlContentParsed[0]?.attribs?.class || '';
   let classNames = `${htmlContentClassNames}`;
-  if (block.attributes.align) {
+  if (block.attributes?.align) {
     const alignClass = `align${block.attributes.align}`;
     if (!classNames.split(' ').find((c: string) => c === alignClass)) {
       classNames = `${classNames} ${alignClass}`;

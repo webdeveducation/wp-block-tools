@@ -6,7 +6,6 @@ import parse from 'html-dom-parser';
 import { useBlockRendererContext } from '../../context';
 import {
   assignIds,
-  getBlockById,
   getClasses,
   getLinkTextStyle,
   getStyles,
@@ -119,12 +118,13 @@ export default function Query({ block, allBlocks }: Props) {
               return ib.name === 'core/query-pagination-numbers';
             }
           );
+          const paginationClasses = getClasses(topInnerBlock);
           return (
             <nav
               key={topInnerBlock.id}
-              className={`${getClasses(
-                topInnerBlock
-              )} wp-block-query-pagination`}
+              className={`${
+                paginationClasses || 'is-layout-flex'
+              } wp-block-query-pagination`}
               style={getStyles(topInnerBlock)}
             >
               {topInnerBlock.innerBlocks?.map((innerBlock) => {
@@ -167,7 +167,7 @@ export default function Query({ block, allBlocks }: Props) {
                     ) : null;
                   }
                   case 'core/query-pagination-next': {
-                    const nextPageNumber = currentPage - 1;
+                    const nextPageNumber = currentPage + 1;
                     return currentPage !==
                       paginationNumbersBlock?.attributes.totalPages ? (
                       <a
@@ -233,7 +233,15 @@ export default function Query({ block, allBlocks }: Props) {
                             canReturn = true;
                           }
                           if (canReturn) {
-                            return (
+                            return currentPage === pNum ? (
+                              <span
+                                key={i}
+                                aria-current="page"
+                                className="page-numbers current"
+                              >
+                                {pNum}
+                              </span>
+                            ) : (
                               <PaginationPageNumber
                                 key={i}
                                 pageNumber={pNum}

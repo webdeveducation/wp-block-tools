@@ -32,14 +32,14 @@ const assignIds = (blocks) => {
 const getBorderRadiusStyle = (attributes) => {
     var _a, _b, _c, _d;
     const borderRadiusStyle = {};
-    if (typeof ((_b = (_a = attributes.style) === null || _a === void 0 ? void 0 : _a.border) === null || _b === void 0 ? void 0 : _b.radius) === 'object') {
+    if (typeof ((_b = (_a = attributes === null || attributes === void 0 ? void 0 : attributes.style) === null || _a === void 0 ? void 0 : _a.border) === null || _b === void 0 ? void 0 : _b.radius) === 'object') {
         const { radius } = attributes.style.border;
         borderRadiusStyle.borderBottomLeftRadius = radius.bottomLeft;
         borderRadiusStyle.borderTopLeftRadius = radius.topLeft;
         borderRadiusStyle.borderTopRightRadius = radius.topRight;
         borderRadiusStyle.borderBottomRightRadius = radius.bottomRight;
     }
-    else if ((_d = (_c = attributes.style) === null || _c === void 0 ? void 0 : _c.border) === null || _d === void 0 ? void 0 : _d.radius) {
+    else if ((_d = (_c = attributes === null || attributes === void 0 ? void 0 : attributes.style) === null || _c === void 0 ? void 0 : _c.border) === null || _d === void 0 ? void 0 : _d.radius) {
         borderRadiusStyle.borderRadius = attributes.style.border.radius;
     }
     return borderRadiusStyle;
@@ -223,6 +223,9 @@ const getStyles = (block) => {
         }
     });
     const { attributes } = block;
+    if (!attributes) {
+        return null;
+    }
     return Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, inlineStyles), getBorderRadiusStyle(attributes)), getBorderStyle(attributes)), getPaddingStyle(attributes)), getMarginStyle(attributes)), getTypographyStyle(attributes)), getTextStyle(attributes)), getBackgroundStyle(attributes)), getMediaTextWidthStyle(attributes)), getLayoutStyles(attributes));
 };
 
@@ -584,17 +587,17 @@ const getCustomInternalLinkComponent = (options) => {
 };
 
 const getClasses = (block) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     const htmlContentParsed = parse__default["default"](block.htmlContent || '');
     let htmlContentClassNames = ((_b = (_a = htmlContentParsed[0]) === null || _a === void 0 ? void 0 : _a.attribs) === null || _b === void 0 ? void 0 : _b.class) || '';
     let classNames = `${htmlContentClassNames}`;
-    if (block.attributes.align) {
+    if ((_c = block.attributes) === null || _c === void 0 ? void 0 : _c.align) {
         const alignClass = `align${block.attributes.align}`;
         if (!classNames.split(' ').find((c) => c === alignClass)) {
             classNames = `${classNames} ${alignClass}`;
         }
     }
-    if (((_d = (_c = block.attributes) === null || _c === void 0 ? void 0 : _c.layout) === null || _d === void 0 ? void 0 : _d.type) === 'flex') {
+    if (((_e = (_d = block.attributes) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.type) === 'flex') {
         classNames = `${classNames} is-layout-flex`;
     }
     // remove duplicates in classNames
@@ -842,7 +845,8 @@ function Query({ block, allBlocks }) {
             const paginationNumbersBlock = (_a = topInnerBlock === null || topInnerBlock === void 0 ? void 0 : topInnerBlock.innerBlocks) === null || _a === void 0 ? void 0 : _a.find((ib) => {
                 return ib.name === 'core/query-pagination-numbers';
             });
-            return (React__default["default"].createElement("nav", { key: topInnerBlock.id, className: `${getClasses(topInnerBlock)} wp-block-query-pagination`, style: getStyles(topInnerBlock) }, (_b = topInnerBlock.innerBlocks) === null || _b === void 0 ? void 0 : _b.map((innerBlock) => {
+            const paginationClasses = getClasses(topInnerBlock);
+            return (React__default["default"].createElement("nav", { key: topInnerBlock.id, className: `${paginationClasses || 'is-layout-flex'} wp-block-query-pagination`, style: getStyles(topInnerBlock) }, (_b = topInnerBlock.innerBlocks) === null || _b === void 0 ? void 0 : _b.map((innerBlock) => {
                 var _a;
                 const paginationArrow = (_a = topInnerBlock.attributes) === null || _a === void 0 ? void 0 : _a.paginationArrow;
                 switch (innerBlock.name) {
@@ -860,7 +864,7 @@ function Query({ block, allBlocks }) {
                             "Previous Page")) : null;
                     }
                     case 'core/query-pagination-next': {
-                        const nextPageNumber = currentPage - 1;
+                        const nextPageNumber = currentPage + 1;
                         return currentPage !==
                             (paginationNumbersBlock === null || paginationNumbersBlock === void 0 ? void 0 : paginationNumbersBlock.attributes.totalPages) ? (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${nextPageNumber}`, className: "wp-block-query-pagination-next", style: getLinkTextStyle(topInnerBlock.attributes), onClick: (e) => {
                                 e.preventDefault();
@@ -898,7 +902,7 @@ function Query({ block, allBlocks }) {
                                 canReturn = true;
                             }
                             if (canReturn) {
-                                return (React__default["default"].createElement(PaginationPageNumber, { key: i, pageNumber: pNum, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }));
+                                return currentPage === pNum ? (React__default["default"].createElement("span", { key: i, "aria-current": "page", className: "page-numbers current" }, pNum)) : (React__default["default"].createElement(PaginationPageNumber, { key: i, pageNumber: pNum, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }));
                             }
                             return null;
                         })));
