@@ -27,7 +27,7 @@ export default function Query({ block, allBlocks }: Props) {
     postId,
   } = useBlockRendererContext();
 
-  const [currentPage, setCurrentPage] = useState('1');
+  const [currentPage, setCurrentPage] = useState(1);
   const { htmlContent, innerBlocks } = block;
   const queryId = block?.attributes?.queryId;
   const parsedHTML: any = parse(htmlContent || '') || [];
@@ -39,6 +39,7 @@ export default function Query({ block, allBlocks }: Props) {
   );
 
   const handlePageClick = (loadPageNum: number) => {
+    setCurrentPage(loadPageNum);
     loadPage(loadPageNum);
   };
 
@@ -46,8 +47,9 @@ export default function Query({ block, allBlocks }: Props) {
     if (queryId) {
       const search = new URLSearchParams(window.location.search);
       const pageNumber = search.get(`query-${queryId}-page`) || '1';
-      setCurrentPage(pageNumber);
-      if (pageNumber && parseInt(pageNumber) > 1) {
+      const pageNumberParsed = pageNumber ? parseInt(pageNumber) : 1;
+      setCurrentPage(pageNumberParsed);
+      if (pageNumberParsed > 1) {
         setResults([]);
         const fetchResults = async () => {
           const response = await fetch(
@@ -112,6 +114,11 @@ export default function Query({ block, allBlocks }: Props) {
             internalHrefReplacement,
           });
         } else if (topInnerBlock.name === 'core/query-pagination') {
+          const paginationNumbersBlock = topInnerBlock?.innerBlocks?.find(
+            (ib) => {
+              return ib.name === 'core/query-pagination-numbers';
+            }
+          );
           return (
             <nav
               key={topInnerBlock.id}
@@ -125,12 +132,11 @@ export default function Query({ block, allBlocks }: Props) {
                   topInnerBlock.attributes?.paginationArrow;
                 switch (innerBlock.name) {
                   case 'core/query-pagination-previous': {
-                    return (
+                    const prevPageNumber = currentPage - 1;
+                    return currentPage !== 1 ? (
                       <a
                         key={innerBlock.id}
-                        href={`?query-${queryId}-page=${
-                          parseInt(currentPage) - 1
-                        }`}
+                        href={`?query-${queryId}-page=${prevPageNumber}`}
                         style={getLinkTextStyle(topInnerBlock.attributes)}
                         className="wp-block-query-pagination-previous"
                         onClick={(e: any) => {
@@ -141,8 +147,8 @@ export default function Query({ block, allBlocks }: Props) {
                             e.target.href
                           );
                           // load here
-                          setCurrentPage(`${parseInt(currentPage) - 1}`);
-                          loadPage(parseInt(currentPage) - 1);
+                          setCurrentPage(prevPageNumber);
+                          loadPage(prevPageNumber);
                         }}
                       >
                         {paginationArrow === 'arrow' ? (
@@ -158,15 +164,15 @@ export default function Query({ block, allBlocks }: Props) {
                         )}{' '}
                         Previous Page
                       </a>
-                    );
+                    ) : null;
                   }
                   case 'core/query-pagination-next': {
-                    return (
+                    const nextPageNumber = currentPage - 1;
+                    return currentPage !==
+                      paginationNumbersBlock?.attributes.totalPages ? (
                       <a
                         key={innerBlock.id}
-                        href={`?query-${queryId}-page=${
-                          parseInt(currentPage) + 1
-                        }`}
+                        href={`?query-${queryId}-page=${nextPageNumber}`}
                         className="wp-block-query-pagination-next"
                         style={getLinkTextStyle(topInnerBlock.attributes)}
                         onClick={(e: any) => {
@@ -177,8 +183,8 @@ export default function Query({ block, allBlocks }: Props) {
                             e.target.href
                           );
                           // load here
-                          setCurrentPage(`${parseInt(currentPage) + 1}`);
-                          loadPage(parseInt(currentPage) + 1);
+                          setCurrentPage(nextPageNumber);
+                          loadPage(nextPageNumber);
                         }}
                       >
                         Next Page{' '}
@@ -194,7 +200,7 @@ export default function Query({ block, allBlocks }: Props) {
                           ''
                         )}
                       </a>
-                    );
+                    ) : null;
                   }
                   case 'core/query-pagination-numbers': {
                     return (
@@ -205,15 +211,41 @@ export default function Query({ block, allBlocks }: Props) {
                         {Array.from({
                           length: innerBlock.attributes.totalPages,
                         }).map((_, i) => {
-                          return (
-                            <PaginationPageNumber
-                              key={i}
-                              pageNumber={i + 1}
-                              queryId={innerBlock.attributes.queryId}
-                              onClick={handlePageClick}
-                              style={getLinkTextStyle(topInnerBlock.attributes)}
-                            />
-                          );
+                          const pNum = i + 1;
+                          let canReturn = false;
+                          if (innerBlock.attributes.totalPages > 7) {
+                            if (
+                              pNum === 1 ||
+                              pNum === innerBlock.attributes.totalPages
+                            ) {
+                              canReturn = true;
+                            } else if (currentPage === pNum) {
+                              canReturn = true;
+                            } else if (
+                              currentPage + 1 === pNum ||
+                              currentPage + 2 === pNum ||
+                              currentPage - 1 === pNum ||
+                              currentPage - 2 === pNum
+                            ) {
+                              canReturn = true;
+                            }
+                          } else {
+                            canReturn = true;
+                          }
+                          if (canReturn) {
+                            return (
+                              <PaginationPageNumber
+                                key={i}
+                                pageNumber={pNum}
+                                queryId={innerBlock.attributes.queryId}
+                                onClick={handlePageClick}
+                                style={getLinkTextStyle(
+                                  topInnerBlock.attributes
+                                )}
+                              />
+                            );
+                          }
+                          return null;
                         })}
                       </div>
                     );

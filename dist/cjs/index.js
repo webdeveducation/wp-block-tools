@@ -768,20 +768,22 @@ function PaginationPageNumber({ pageNumber, queryId, onClick, style, }) {
 function Query({ block, allBlocks }) {
     var _a;
     const { wpDomain, customInternalLinkComponent, internalHrefReplacement, siteDomain, postId, } = useBlockRendererContext();
-    const [currentPage, setCurrentPage] = React.useState('1');
+    const [currentPage, setCurrentPage] = React.useState(1);
     const { htmlContent, innerBlocks } = block;
     const queryId = (_a = block === null || block === void 0 ? void 0 : block.attributes) === null || _a === void 0 ? void 0 : _a.queryId;
     const parsedHTML = parse__default["default"](htmlContent || '') || [];
     const [results, setResults] = React.useState((innerBlocks === null || innerBlocks === void 0 ? void 0 : innerBlocks.filter((innerBlock) => innerBlock.name !== 'core/query-pagination')) || []);
     const handlePageClick = (loadPageNum) => {
+        setCurrentPage(loadPageNum);
         loadPage(loadPageNum);
     };
     React.useEffect(() => {
         if (queryId) {
             const search = new URLSearchParams(window.location.search);
             const pageNumber = search.get(`query-${queryId}-page`) || '1';
-            setCurrentPage(pageNumber);
-            if (pageNumber && parseInt(pageNumber) > 1) {
+            const pageNumberParsed = pageNumber ? parseInt(pageNumber) : 1;
+            setCurrentPage(pageNumberParsed);
+            if (pageNumberParsed > 1) {
                 setResults([]);
                 const fetchResults = () => __awaiter(this, void 0, void 0, function* () {
                     const response = yield fetch(`${wpDomain}/graphql?query=${`
@@ -823,7 +825,7 @@ function Query({ block, allBlocks }) {
         }
     });
     return (React__default["default"].createElement(React__default["default"].Fragment, null, (innerBlocks || []).map((topInnerBlock) => {
-        var _a;
+        var _a, _b;
         if (topInnerBlock.name === 'wp-block-tools/loop') {
             return createReactNodes({
                 html: parsedHTML,
@@ -837,39 +839,68 @@ function Query({ block, allBlocks }) {
             });
         }
         else if (topInnerBlock.name === 'core/query-pagination') {
-            return (React__default["default"].createElement("nav", { key: topInnerBlock.id, className: `${getClasses(topInnerBlock)} wp-block-query-pagination`, style: getStyles(topInnerBlock) }, (_a = topInnerBlock.innerBlocks) === null || _a === void 0 ? void 0 : _a.map((innerBlock) => {
+            const paginationNumbersBlock = (_a = topInnerBlock === null || topInnerBlock === void 0 ? void 0 : topInnerBlock.innerBlocks) === null || _a === void 0 ? void 0 : _a.find((ib) => {
+                return ib.name === 'core/query-pagination-numbers';
+            });
+            return (React__default["default"].createElement("nav", { key: topInnerBlock.id, className: `${getClasses(topInnerBlock)} wp-block-query-pagination`, style: getStyles(topInnerBlock) }, (_b = topInnerBlock.innerBlocks) === null || _b === void 0 ? void 0 : _b.map((innerBlock) => {
                 var _a;
                 const paginationArrow = (_a = topInnerBlock.attributes) === null || _a === void 0 ? void 0 : _a.paginationArrow;
                 switch (innerBlock.name) {
                     case 'core/query-pagination-previous': {
-                        return (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${parseInt(currentPage) - 1}`, style: getLinkTextStyle(topInnerBlock.attributes), className: "wp-block-query-pagination-previous", onClick: (e) => {
+                        const prevPageNumber = currentPage - 1;
+                        return currentPage !== 1 ? (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${prevPageNumber}`, style: getLinkTextStyle(topInnerBlock.attributes), className: "wp-block-query-pagination-previous", onClick: (e) => {
                                 e.preventDefault();
                                 window.history.pushState({ path: e.target.href }, '', e.target.href);
                                 // load here
-                                setCurrentPage(`${parseInt(currentPage) - 1}`);
-                                loadPage(parseInt(currentPage) - 1);
+                                setCurrentPage(prevPageNumber);
+                                loadPage(prevPageNumber);
                             } },
                             paginationArrow === 'arrow' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-previous-arrow is-arrow-arrow" }, "\u2190")) : paginationArrow === 'chevron' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-previous-arrow is-arrow-chevron" }, "\u00AB")) : (''),
                             ' ',
-                            "Previous Page"));
+                            "Previous Page")) : null;
                     }
                     case 'core/query-pagination-next': {
-                        return (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${parseInt(currentPage) + 1}`, className: "wp-block-query-pagination-next", style: getLinkTextStyle(topInnerBlock.attributes), onClick: (e) => {
+                        const nextPageNumber = currentPage - 1;
+                        return currentPage !==
+                            (paginationNumbersBlock === null || paginationNumbersBlock === void 0 ? void 0 : paginationNumbersBlock.attributes.totalPages) ? (React__default["default"].createElement("a", { key: innerBlock.id, href: `?query-${queryId}-page=${nextPageNumber}`, className: "wp-block-query-pagination-next", style: getLinkTextStyle(topInnerBlock.attributes), onClick: (e) => {
                                 e.preventDefault();
                                 window.history.pushState({ path: e.target.href }, '', e.target.href);
                                 // load here
-                                setCurrentPage(`${parseInt(currentPage) + 1}`);
-                                loadPage(parseInt(currentPage) + 1);
+                                setCurrentPage(nextPageNumber);
+                                loadPage(nextPageNumber);
                             } },
                             "Next Page",
                             ' ',
-                            paginationArrow === 'arrow' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-arrow" }, "\u2192")) : paginationArrow === 'chevron' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-chevron" }, "\u00BB")) : ('')));
+                            paginationArrow === 'arrow' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-arrow" }, "\u2192")) : paginationArrow === 'chevron' ? (React__default["default"].createElement("span", { className: "wp-block-query-pagination-next-arrow is-arrow-chevron" }, "\u00BB")) : (''))) : null;
                     }
                     case 'core/query-pagination-numbers': {
                         return (React__default["default"].createElement("div", { key: innerBlock.id, className: "wp-block-query-pagination-numbers" }, Array.from({
                             length: innerBlock.attributes.totalPages,
                         }).map((_, i) => {
-                            return (React__default["default"].createElement(PaginationPageNumber, { key: i, pageNumber: i + 1, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }));
+                            const pNum = i + 1;
+                            let canReturn = false;
+                            if (innerBlock.attributes.totalPages > 7) {
+                                if (pNum === 1 ||
+                                    pNum === innerBlock.attributes.totalPages) {
+                                    canReturn = true;
+                                }
+                                else if (currentPage === pNum) {
+                                    canReturn = true;
+                                }
+                                else if (currentPage + 1 === pNum ||
+                                    currentPage + 2 === pNum ||
+                                    currentPage - 1 === pNum ||
+                                    currentPage - 2 === pNum) {
+                                    canReturn = true;
+                                }
+                            }
+                            else {
+                                canReturn = true;
+                            }
+                            if (canReturn) {
+                                return (React__default["default"].createElement(PaginationPageNumber, { key: i, pageNumber: pNum, queryId: innerBlock.attributes.queryId, onClick: handlePageClick, style: getLinkTextStyle(topInnerBlock.attributes) }));
+                            }
+                            return null;
                         })));
                     }
                     default:
