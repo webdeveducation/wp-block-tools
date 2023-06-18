@@ -1,6 +1,5 @@
 import React from 'react';
 import { IBlockBase } from '../../types';
-import { Helmet } from 'react-helmet';
 import { useBlockRendererContext } from '../../context';
 import { TerminalBlock } from './TerminalBlock';
 import './style.scss';
@@ -23,19 +22,8 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
     customInternalLinkComponent,
   } = useBlockRendererContext();
 
-  const inlineStylesheets = blocks
-    .filter((block) => !!block.inlineStylesheet)
-    .map((block) => block.inlineStylesheet);
-
   return (
     <>
-      {!!inlineStylesheets.length && (
-        <Helmet>
-          {inlineStylesheets.map((stylesheet, i) => (
-            <style key={i}>{stylesheet}</style>
-          ))}
-        </Helmet>
-      )}
       {blocks.map((block) => {
         // render custom component for this block if exists
         const component = renderComponent?.({

@@ -18,3 +18,4 @@ export * from './getLayoutStyles';
 export * from './convertStyleStringToReact';
 export * from './getBlockById';
 export * from './getClasses';
+export * from './query';

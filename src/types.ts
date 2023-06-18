@@ -5,8 +5,6 @@ export interface IBlockBase {
   attributes: { [key: string]: any };
   htmlContent?: string;
   innerBlocks?: IBlockBase[];
-  inlineStylesheet?: string;
-  inlineClassnames?: string;
   [key: string]: any;
 }
 

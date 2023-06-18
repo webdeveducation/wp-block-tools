@@ -9,6 +9,7 @@
     "module": "es6",
     "moduleResolution": "node",
     "skipLibCheck": true,
+    "strictPropertyInitialization": false,
   },
   "include": ["src"],
 }
