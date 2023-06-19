@@ -7,7 +7,7 @@ type Props = {
   style?: any;
 };
 
-export default function PaginationPageNumber({
+export function PaginationPageNumber({
   pageNumber,
   queryId,
   onClick,

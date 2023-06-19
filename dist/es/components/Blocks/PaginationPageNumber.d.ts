@@ -5,5 +5,5 @@ type Props = {
     onClick: (loadPageNum: number) => void;
     style?: any;
 };
-export default function PaginationPageNumber({ pageNumber, queryId, onClick, style, }: Props): JSX.Element;
+export declare function PaginationPageNumber({ pageNumber, queryId, onClick, style, }: Props): JSX.Element;
 export {};

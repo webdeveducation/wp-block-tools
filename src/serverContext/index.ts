@@ -33,6 +33,9 @@ export default class ServerContext {
   private static instance: ServerContext;
   private constructor() {}
   public static setData(data: IServerContext): ServerContext {
+    if (!ServerContext.instance) {
+      ServerContext.instance = new ServerContext();
+    }
     ServerContext.instance.blocks = data.blocks;
     ServerContext.instance.postId = data.postId;
     ServerContext.instance.renderComponent = data.renderComponent;

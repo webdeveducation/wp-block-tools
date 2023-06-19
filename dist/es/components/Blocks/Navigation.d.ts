@@ -1,8 +1,7 @@
-/// <reference types="react" />
-import { IBlockBase } from '../../types';
+import React from 'react';
 type Props = {
-    block: IBlockBase;
-    allBlocks: IBlockBase[];
+    children: React.ReactNode;
+    htmlContent: string;
 };
-export default function Navigation({ block, allBlocks }: Props): JSX.Element;
+export declare function Navigation({ htmlContent, children }: Props): JSX.Element;
 export {};

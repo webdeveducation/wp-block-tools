@@ -9,7 +9,6 @@ export * from './getBackgroundStyle';
 export * from './getMediaTextWidthStyle';
 export * from './getTextStyle';
 export * from './parseValue';
-export * from './assignGatsbyImage';
 export * from './getLinkTextStyle';
 export * from './getBlockGapStyle';
 export * from './getBlockGapStyleForChild';

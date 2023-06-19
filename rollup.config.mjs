@@ -1,24 +1,17 @@
 import sass from 'rollup-plugin-sass';
 import typescript from 'rollup-plugin-typescript2';
+import banner2 from 'rollup-plugin-banner2';
 
-import pkg from './package.json' assert { type: 'json' };
-// continued
-const rollup = {
+const server = {
   input: 'src/index.ts',
   output: [
     {
-      file: pkg.main,
-      format: 'cjs',
-      exports: 'named',
-      sourcemap: true,
-      strict: false,
-    },
-    {
-      file: pkg.module,
+      dir: 'dist/es',
       format: 'es',
       exports: 'named',
       sourcemap: true,
       strict: false,
+      preserveModules: true,
     },
   ],
   plugins: [
@@ -27,8 +20,12 @@ const rollup = {
       outputStyle: 'compressed',
       output: './dist/css/style.css',
     }),
+    banner2(
+      () => `'use client';
+`
+    ),
   ],
   external: ['react', 'react-dom'],
 };
 
-export default [rollup];
+export default [server];

@@ -1,5 +1,4 @@
 import React, { Fragment } from 'react';
-import { useBlockRendererContext } from '../../../context';
 import { IBlockBase } from '../../../types';
 import parse from 'html-dom-parser';
 import { createReactNodes } from '../../../utils/createReactNodes';
@@ -9,6 +8,7 @@ import {
   getLinkTextStyle,
 } from '../../../utils';
 import { hasClass } from '../../../utils/hasClass';
+import ServerContext from '../../../serverContext';
 
 export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
   const {
@@ -17,7 +17,7 @@ export const TerminalBlock = ({ block }: { block: IBlockBase }) => {
     wpDomain,
     internalHrefReplacement,
     siteDomain,
-  } = useBlockRendererContext();
+  } = ServerContext.getInstance();
 
   const parsedHTML: any[] = parse(block.htmlContent || '') || [];
 

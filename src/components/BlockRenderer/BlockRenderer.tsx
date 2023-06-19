@@ -1,13 +1,17 @@
 import React from 'react';
-import { IBlockBase } from '../../types';
-import { useBlockRendererContext } from '../../context';
+import {
+  CustomInternalLinkComponent,
+  IBlockBase,
+  InternalHrefReplacement,
+} from '../../types';
 import { TerminalBlock } from './TerminalBlock';
 import './style.scss';
 import { createReactNodes } from '../../utils/createReactNodes';
 import parse from 'html-dom-parser';
-import Navigation from '../Blocks/Navigation';
-import { getBlockById, getClasses, getStyles } from '../../utils';
-import Query from '../Blocks/Query';
+import { assignIds, getBlockById, getClasses, getStyles } from '../../utils';
+import ServerContext from '../../serverContext';
+import { Navigation } from '../Blocks/Navigation';
+import { Query } from '../Blocks/Query';
 
 export type BlockRendererProps = {
   blocks?: IBlockBase[];
@@ -20,7 +24,9 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
     wpDomain,
     siteDomain,
     customInternalLinkComponent,
-  } = useBlockRendererContext();
+    internalHrefReplacement,
+    postId,
+  } = ServerContext.getInstance();
 
   return (
     <>
@@ -121,16 +127,33 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
             }
             case 'core/query': {
               return (
-                <Query key={block.id} block={block} allBlocks={allBlocks} />
+                <Query
+                  key={block.id}
+                  block={block}
+                  allBlocks={allBlocks}
+                  wpDomain={wpDomain}
+                  customInternalLinkComponent={customInternalLinkComponent}
+                  internalHrefReplacement={internalHrefReplacement}
+                  postId={postId}
+                  siteDomain={siteDomain}
+                />
               );
             }
             case 'core/navigation': {
               return (
-                <Navigation
-                  key={block.id}
-                  block={block}
-                  allBlocks={allBlocks}
-                />
+                <Navigation key={block.id} htmlContent={block.htmlContent}>
+                  {createReactNodes({
+                    html: parsedHTML,
+                    block,
+                    allBlocks,
+                    component: <BlockRenderer blocks={block.innerBlocks} />,
+                    className: 'wp-block-navigation__container',
+                    wpDomain,
+                    siteDomain,
+                    customInternalLinkComponent,
+                    internalHrefReplacement,
+                  })}
+                </Navigation>
               );
             }
             default: {
@@ -156,11 +179,31 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
   );
 };
 
-export const RootBlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
-  const { blocks: allBlocks } = useBlockRendererContext();
+export type RootBlockRendererProps = {
+  blocks: IBlockBase[];
+  postId: number;
+  renderComponent?: (options: {
+    block: IBlockBase;
+    classNames?: string;
+    styles?: { [key: string]: string | number };
+  }) => React.ReactElement | null;
+  customInternalLinkComponent?: CustomInternalLinkComponent;
+  internalHrefReplacement?: InternalHrefReplacement;
+  wpDomain?: string;
+  siteDomain?: string;
+};
+
+export const RootBlockRenderer = (props: RootBlockRendererProps) => {
+  ServerContext.setData(props);
+  const blocksWithIds = assignIds(props.blocks);
+  if (props.internalHrefReplacement === 'absolute' && !props.siteDomain) {
+    console.warn(
+      '`siteDomain` must be specified when internalHrefReplacement="absolute"'
+    );
+  }
   return (
     <div className="wp-site-blocks">
-      <BlockRenderer blocks={allBlocks || blocks} />
+      <BlockRenderer blocks={blocksWithIds} />
     </div>
   );
 };

@@ -1,25 +1,11 @@
 import React, { useEffect } from 'react';
-import { createReactNodes } from '../../utils/createReactNodes';
-import { IBlockBase } from '../../types';
-import { BlockRenderer } from '../BlockRenderer';
-import parse from 'html-dom-parser';
-import { useBlockRendererContext } from '../../context';
 
 type Props = {
-  block: IBlockBase;
-  allBlocks: IBlockBase[];
+  children: React.ReactNode;
+  htmlContent: string;
 };
 
-export default function Navigation({ block, allBlocks }: Props) {
-  const {
-    wpDomain,
-    customInternalLinkComponent,
-    internalHrefReplacement,
-    siteDomain,
-  } = useBlockRendererContext();
-  const { htmlContent, innerBlocks } = block;
-  const parsedHTML: any = parse(htmlContent || '') || [];
-
+export function Navigation({ htmlContent, children }: Props) {
   useEffect(() => {
     // logic to detect open / close mobile menu
     const tempHolder = document.createElement('div');
@@ -58,19 +44,5 @@ export default function Navigation({ block, allBlocks }: Props) {
     }
   }, []);
 
-  return (
-    <React.Fragment>
-      {createReactNodes({
-        html: parsedHTML,
-        block,
-        allBlocks,
-        component: <BlockRenderer blocks={innerBlocks} />,
-        className: 'wp-block-navigation__container',
-        wpDomain,
-        siteDomain,
-        customInternalLinkComponent,
-        internalHrefReplacement,
-      })}
-    </React.Fragment>
-  );
+  return <React.Fragment>{children}</React.Fragment>;
 }

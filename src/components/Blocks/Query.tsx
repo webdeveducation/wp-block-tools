@@ -1,31 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { createReactNodes } from '../../utils/createReactNodes';
-import { IBlockBase } from '../../types';
+import {
+  CustomInternalLinkComponent,
+  IBlockBase,
+  InternalHrefReplacement,
+} from '../../types';
 import { BlockRenderer } from '../BlockRenderer';
 import parse from 'html-dom-parser';
-import { useBlockRendererContext } from '../../context';
 import {
   assignIds,
   getClasses,
   getLinkTextStyle,
   getStyles,
 } from '../../utils';
-import PaginationPageNumber from './PaginationPageNumber';
+import { PaginationPageNumber } from './PaginationPageNumber';
 
 type Props = {
   block: IBlockBase;
   allBlocks: IBlockBase[];
+  wpDomain?: string;
+  siteDomain?: string;
+  postId: number;
+  internalHrefReplacement?: InternalHrefReplacement;
+  customInternalLinkComponent?: CustomInternalLinkComponent;
 };
 
-export default function Query({ block, allBlocks }: Props) {
-  const {
-    wpDomain,
-    customInternalLinkComponent,
-    internalHrefReplacement,
-    siteDomain,
-    postId,
-  } = useBlockRendererContext();
-
+export function Query({
+  block,
+  allBlocks,
+  wpDomain,
+  internalHrefReplacement,
+  siteDomain,
+  customInternalLinkComponent,
+  postId,
+}: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const { htmlContent, innerBlocks } = block;
   const queryId = block?.attributes?.queryId;
@@ -65,9 +73,12 @@ export default function Query({ block, allBlocks }: Props) {
             }
           );
           const json = await response.json();
-          // assign ids to new blocks
-          const newBlocks = assignIds(json.data.coreQuery);
-          setResults(newBlocks);
+          console.log(json.data);
+          if (json.data) {
+            // assign ids to new blocks
+            const newBlocks = assignIds(json.data.coreQuery);
+            setResults(newBlocks);
+          }
         };
         fetchResults();
       }
