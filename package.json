@@ -12,6 +12,16 @@
   ],
   "main": "dist/cjs/index.js",
   "module": "dist/es/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/es/client/index.js",
+      "require": "./dist/cjs/client/index.js"
+    },
+    "./server": {
+      "import": "./dist/es/server/index.js",
+      "require": "./dist/cjs/server/index.js"
+    }
+  },
   "files": [
     "dist",
     "README.md"
@@ -66,6 +76,7 @@
     "@types/react-dom": "^18.0.9",
     "@types/uuid": "^9.0.0",
     "rollup": "^2.79.1 ",
+    "rollup-plugin-banner2": "^1.2.2",
     "rollup-plugin-preserve-directives": "^0.2.0",
     "rollup-plugin-sass": "^1.12.19",
     "rollup-plugin-typescript2": "^0.34.1",

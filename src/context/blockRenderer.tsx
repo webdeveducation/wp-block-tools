@@ -4,17 +4,14 @@ import {
   CustomInternalLinkComponent,
   IBlockBase,
   InternalHrefReplacement,
+  RenderComponent,
 } from '../types';
 import { assignIds } from '../utils';
 
 export type IBlockRendererContext = {
   blocks: IBlockBase[];
   postId: number;
-  renderComponent?: (options: {
-    block: IBlockBase;
-    classNames?: string;
-    styles?: { [key: string]: string | number };
-  }) => React.ReactElement | null;
+  renderComponent?: RenderComponent;
   customInternalLinkComponent?: CustomInternalLinkComponent;
   internalHrefReplacement?: InternalHrefReplacement;
   wpDomain?: string;
@@ -41,6 +38,7 @@ export const BlockRendererProvider = ({
       '`siteDomain` must be specified when internalHrefReplacement="absolute"'
     );
   }
+  console.log({ blocks });
   return (
     <BlockRendererContext.Provider
       value={{

@@ -6,7 +6,12 @@ import './style.scss';
 import { createReactNodes } from '../../utils/createReactNodes';
 import parse from 'html-dom-parser';
 import Navigation from '../Blocks/Navigation';
-import { getBlockById, getClasses, getStyles } from '../../utils';
+import {
+  getBlockById,
+  getClasses,
+  getStyles,
+  getUnstableGalleryGapStyle,
+} from '../../utils';
 import Query from '../Blocks/Query';
 
 export type BlockRendererProps = {
@@ -55,6 +60,20 @@ export const BlockRenderer = ({ blocks = [] }: BlockRendererProps) => {
               return (
                 <BlockRenderer key={block.id} blocks={block.innerBlocks} />
               );
+            case 'core/gallery': {
+              return (
+                <figure
+                  key={block.id}
+                  className={getClasses(block)}
+                  style={{
+                    ...getStyles(block),
+                    ...getUnstableGalleryGapStyle(block.attributes),
+                  }}
+                >
+                  <BlockRenderer blocks={block.innerBlocks} />
+                </figure>
+              );
+            }
             case 'core/media-text': {
               return (
                 <React.Fragment key={block.id}>

@@ -1,3 +1,9 @@
+export type RenderComponent = (options: {
+  block: IBlockBase;
+  classNames?: string;
+  styles?: { [key: string]: string | number };
+}) => React.ReactElement | null;
+
 export interface IBlockBase {
   id?: string;
   parentId?: string;

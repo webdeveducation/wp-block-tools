@@ -74,8 +74,6 @@ export default function Query({ block, allBlocks }: Props) {
     }
   }, [queryId]);
 
-  console.log('inner blocks: ', block.innerBlocks);
-
   const loadPage = async (loadPageNum: number) => {
     if (queryId) {
       const response = await fetch(
@@ -162,7 +160,7 @@ export default function Query({ block, allBlocks }: Props) {
                         ) : (
                           ''
                         )}{' '}
-                        Previous Page
+                        {innerBlock.attributes?.label || 'Previous Page'}
                       </a>
                     ) : null;
                   }
@@ -187,7 +185,7 @@ export default function Query({ block, allBlocks }: Props) {
                           loadPage(nextPageNumber);
                         }}
                       >
-                        Next Page{' '}
+                        {innerBlock.attributes?.label || 'Next Page'}{' '}
                         {paginationArrow === 'arrow' ? (
                           <span className="wp-block-query-pagination-next-arrow is-arrow-arrow">
                             →

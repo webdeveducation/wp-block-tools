@@ -20,7 +20,10 @@ export default function Navigation({ block, allBlocks }: Props) {
   const { htmlContent, innerBlocks } = block;
   const parsedHTML: any = parse(htmlContent || '') || [];
 
+  console.log('IN HERE 1');
+
   useEffect(() => {
+    console.log('IN HERE');
     // logic to detect open / close mobile menu
     const tempHolder = document.createElement('div');
     tempHolder.innerHTML = htmlContent || '';
